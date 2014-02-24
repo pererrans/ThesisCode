@@ -57,7 +57,10 @@ D_t = D_t*(1+(DPERM-3)*(DPERM_change));
 % update the supply curve
 newSupply=sortrows(newSupply,3);    %sort supply by price
 newSupply = [newSupply cumsum(newSupply(:,2))]; %add a column for cumulative supply
+
 D_cases = [1/D_fluct 1 D_fluct];    %MAYBE_TODO: does this loglinear perturbation scheme make sense?
+
+
 %determine what the equilibrium Q is for each demand scenario (given the
 %different demand shocks) 
 for j=1:length(D_cases)

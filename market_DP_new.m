@@ -49,57 +49,75 @@ D_prob = [0,1,0];
 %swings because of semi-permanent substitution (DPERM)
 DPERM_change = 0.1; % +10% change in non-shocked demand if DPERM is 1, and 20% if it's 2. 
 
-%%Supply curve - assume it doesn't change over time
-% structure is owner, quantity, cost
-SupplyCurve = zeros(94,3,T);
-SupplyCurve(1:44,:,1) = [1	289	49
-            1	12	65
-            1	5	86
-            2	74	39
-            2	40	46
-            2	42	47
-            2	24	48
-            2	25	49
-            3	46	40
-            3	2	40
-            3	50	42
-            3	9	43
-            3	3	44
-            3	102	46
-            3	24	47
-            3	5	54
-            3	4	55
-            3	2	66
-            3	6	76
-            3	21	76
-            3	9	96
-            4	0	5
-            4	16	15
-            4	9	25
-            4	15	35
-            4	49	45
-            4	169	55
-            4	209	65
-            4	150	75
-            4	95	85
-            4	72	95
-            4	70	105
-            4	48	115
-            4	15	125
-            4	22	135
-            4	27	145
-            4	4	155
-            4	4	165
-            4	2	175
-            4	1	185
-            4	3	195
-            4	3	205
-            4	3	225
-            4	10	245];  
-%inflate highest price Q to never run out of supply
-highcostQ = repmat([4 2 245], 50,1);
-SupplyCurve(45:94,:,1) = highcostQ;
+
+% %%Supply curve - assume it doesn't change over time
+% % structure is owner, quantity, cost
+% SupplyCurve = zeros(94,3,T);
+% SupplyCurve(1:44,:,1) = [1	289	49
+%             1	12	65
+%             1	5	86
+%             2	74	39
+%             2	40	46
+%             2	42	47
+%             2	24	48
+%             2	25	49
+%             3	46	40
+%             3	2	40
+%             3	50	42
+%             3	9	43
+%             3	3	44
+%             3	102	46
+%             3	24	47
+%             3	5	54
+%             3	4	55
+%             3	2	66
+%             3	6	76
+%             3	21	76
+%             3	9	96
+%             4	0	5
+%             4	16	15
+%             4	9	25
+%             4	15	35
+%             4	49	45
+%             4	169	55
+%             4	209	65
+%             4	150	75
+%             4	95	85
+%             4	72	95
+%             4	70	105
+%             4	48	115
+%             4	15	125
+%             4	22	135
+%             4	27	145
+%             4	4	155
+%             4	4	165
+%             4	2	175
+%             4	1	185
+%             4	3	195
+%             4	3	205
+%             4	3	225
+%             4	10	245];  
+% %inflate highest price Q to never run out of supply
+% highcostQ = repmat([4 2 245], 50,1);
+% SupplyCurve(45:94,:,1) = highcostQ;
+% SupplyCurve(:,:,1) = sortrows(SupplyCurve(:,:,1),3);
+
+%DUMMY Supply Curve
+SupplyCurve = zeros(12,3,T);
+SupplyCurve(:,:,1) = [  1	200	50
+                        1	200	100
+                        1	200	150
+                        1	200	200
+                        2	200	50
+                        2	200	100
+                        2	200	150
+                        2	200	200
+                        3	200	50
+                        3	200	100
+                        3	200	150
+                        3	200	200];
 SupplyCurve(:,:,1) = sortrows(SupplyCurve(:,:,1),3);
+
 
 %Assume a base supply curve that is constant over the time periods
 %Populate the supply curve for the future
@@ -122,17 +140,17 @@ end
 %                     3	45	54	544
 %                     3	45	67	1135];
 
-IncentiveCurveA = [1	10	5	10
-                    1	10	5	10
-                    1	10	5	10];
+IncentiveCurveA = [1	5	9	10
+                    1	5	10	10
+                    1	5	11	10];
 
-IncentiveCurveB = [2	10	5	10
-                    2	10	5	10
-                    2	10	5	10];
+IncentiveCurveB = [2	5	9	10
+                    2	5	10	10
+                    2	5	11	10];
 
-IncentiveCurveC = [3	10	5	10
-                    3	10	5	10
-                    3	10	6	10];
+IncentiveCurveC = [3	5	9	10
+                    3	5	10	10
+                    3	5	11	10];
 
                 
                 
@@ -143,7 +161,7 @@ TotalIncentiveCurve = [IncentiveCurveA(1:numIncMines, :);
 %calculate the coefficient a for the demand function
 %P=X*a*Q^(-1/elasticity)*(1+g)^(1/elasticity)
 %a will remain the same throughout the time periods
-baseQ = 1100; %where base demand and supply should meet
+baseQ = D_0; %where base demand and supply should meet
 SupplyCurve_0=sortrows(SupplyCurve(:,:,1),3);    %sort supply by price
 baseSupply = [SupplyCurve_0 cumsum(SupplyCurve_0(:,2))]; %add a column for cumulative supply
 for i=1:length(baseSupply)
@@ -220,7 +238,7 @@ for t=T:-1:1
                 %TODO: could incorporate delay in opening (currently no
                 %delay)
                 MinesOpened_updated = MinesOpened + [(a==1),(a==2),(a==3),0,0,0,0,0,0];
-                [market_p, market_q, cap_util, rewards, faces] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+                [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
                 %return   %DEBUG this break is just to run the findPrice function once
                 %display('As turn - prices');
                 %Calculate this period expected reward for A
@@ -283,7 +301,7 @@ for t=T:-1:1
                 end
                 %calculate the relevant outcome for A given this action
                 MinesOpened_updated = MinesOpened + [0,0,0,(b==1),(b==2),(b==3),0,0,0];
-                [market_p, market_q, cap_util, rewards, faces] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+                [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
                 %display('Bs turn - prices');
                 %display(market_p);
                 %Calculate this period expected reward for A
@@ -346,7 +364,7 @@ for t=T:-1:1
                 end
                 %calculate the relevant outcome for A given this action
                 MinesOpened_updated = MinesOpened + [0,0,0,0,0,0,(c==1),(c==2),(c==3)];
-                [market_p, market_q, cap_util, rewards, faces] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+                [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
                 %display('Cs turn - prices');
                 %display(market_p);
                 %Calculate this period expected reward for A
@@ -450,12 +468,12 @@ sim_orderOfFirms = orderOfFirms;
 %demand fluctuation range and prob
 sim_D_fluct = 0.9;
 sim_D_prob = [0,1,0];
+sim_Demand = Demand;
 
 %the change associated with a state variable on whether demand has been permanently changed due to a
 %high demand/low demand event (demand never fully recovers from large
 %swings because of semi-permanent substitution (DPERM)
 sim_DPERM_change = 0.1; % +10% change in non-shocked demand if DPERM is 1, and 20% if it's 2. 
-sim_D_fluct = 0;    %no expectation of price shock in the simulation
 
 %output to be recorded
 sim_Prices_1 = zeros(T, simNum);
@@ -463,6 +481,9 @@ sim_Q_1 = zeros(T, simNum);
 sim_CapUtil_1 = zeros(T, simNum);
 sim_Faces_1 = zeros(T, simNum); %when it crossed the cliff face of supply curve
 sim_V_1 = zeros(numFirms, simNum);
+sim_openings_1 = zeros(numIncMines, numFirms, simNum);
+sim_diag_1 = cell(T,simNum);    %cell array to store the diagnostics from each market clearing
+sim_firm_Q_1 = zeros(numFirms, T, simNum);
 
 cliffCount_2 = zeros(T, simNum); %when it crossed the cliff face of supply curve
 sim_Prices_2 = zeros(T, simNum);
@@ -470,8 +491,13 @@ sim_Q_2 = zeros(T, simNum);
 sim_CapUtil_2 = zeros(T, simNum);
 sim_Faces_2 = zeros(T, simNum);
 sim_V_2 = zeros(numFirms, simNum);
-sim_openings = zeros(numFirms, simNum);
+%record the time period each mine opened (if they did at all)
+sim_openings_2 = zeros(numIncMines, numFirms, simNum);
+sim_diag_2 = cell(T,simNum);    %cell array to store the diagnostics from each market clearing
+sim_firm_Q_2 = zeros(numFirms, T, simNum);
 
+%name of the diagnostic entries
+sim_diag_names = cell(1,1);
 
 for(sim=1:simNum)
     %initialize the state variables
@@ -492,12 +518,16 @@ for(sim=1:simNum)
             
             sim_m_1 = sim_m_1 + [(a_1==1),(a_1==2),(a_1==3),0,0,0,0,0,0];
             sim_m_2 = sim_m_2 + [(a_2==1),(a_2==2),(a_2==3),0,0,0,0,0,0];
+            
+            %if there is a new opening, record it and add to capex
             if(a_1~=0)
                     capex_1(firm) = IncentiveCurveA(a_1,4);
+                    sim_openings_1(a_1,firm, sim) = t;
             end
             
             if(a_2~=0)
                     capex_2(firm) = IncentiveCurveA(a_2,4);
+                    sim_openings_2(a_2,firm, sim) = t;
             end
 
         elseif(firm==2)
@@ -507,10 +537,12 @@ for(sim=1:simNum)
             sim_m_2 = sim_m_2 + [0,0,0,(b_2==1),(b_2==2),(b_2==3),0,0,0];
             if(b_1~=0)
                     capex_1(firm) = IncentiveCurveB(b_1,4);
+                    sim_openings_1(b_1,firm, sim) = t;
             end
             
             if(b_2~=0)
                     capex_2(firm) = IncentiveCurveB(b_2,4);
+                    sim_openings_2(b_2,firm, sim) = t;
             end
 
         elseif(firm==3)
@@ -520,21 +552,26 @@ for(sim=1:simNum)
             sim_m_2 = sim_m_2 + [0,0,0,0,0,0,(c_2==1),(c_2==2),(c_2==3)];
             if(c_1~=0)
                     capex_1(firm) = IncentiveCurveC(a_1,4);
+                    sim_openings_1(c_1,firm, sim) = t;
             end
             
             if(c_2~=0)
                     capex_2(firm) = IncentiveCurveC(a_2,4);
+                    sim_openings_2(a_2,firm, sim) = t;
             end
 
         end
         
         %simulate the demand shock
-        D_index = randsample(length(D_prob), 1, true, D_prob);
-        D_cases = Demand(t).*[1/D_fluct 1 D_fluct];
+        D_index = randsample(length(sim_D_prob), 1, true, sim_D_prob);
+        D_cases = sim_Demand(t).*[1/sim_D_fluct 1 sim_D_fluct];
         sim_demand = D_cases(D_index);
-        [market_p_1, market_q_1, cap_util_1, rewards_1, faces_1] = findPrice_new(T, numFirms, t, sim_m_1, sim_dperm_1, sim_DPERM_change, el, D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
-        [market_p_2, market_q_2, cap_util_2, rewards_2, faces_2] = findPrice_new(T, numFirms, t, sim_m_2, sim_dperm_2, sim_DPERM_change, el, D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
-        
+        [market_p_1, market_q_1, cap_util_1, rewards_1, faces_1, firms_q_1, diag_1] = findPrice_new(T, numFirms, t, sim_m_1, sim_dperm_1, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+        [market_p_2, market_q_2, cap_util_2, rewards_2, faces_2, firms_q_2, diag_2] = findPrice_new(T, numFirms, t, sim_m_2, sim_dperm_2, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+        %store the function diagnostics
+        sim_diag_1{t,sim} = diag_1(3,:);	%HARDCODE ALERT
+        sim_diag_2{t,sim} = diag_2(3,:);    %HARDCODE ALERT
+        sim_diag_names{1,1} = diag_1(1,:);  %get the names of the variables for the function diagnostics
         
         %record down the results 
         %TODO: the correct # faces is brute-forced instead of adjusted for in findPrice function. Fix this.
@@ -546,12 +583,15 @@ for(sim=1:simNum)
         sim_CapUtil_2(t, sim) = cap_util_2(2);
         sim_Faces_1(t, sim) = faces_1;
         sim_Faces_2(t, sim) = faces_2;
-
+        
         for(i=1:numFirms)
             r_1 = rewards_1(i,2) - capex_1(i);
             r_2 = rewards_2(i,2) - capex_2(i);
             sim_V_1(i, sim) = sim_V_1(i, sim) + r_1*(1-sim_dr)*(t-1);
             sim_V_2(i, sim) = sim_V_2(i, sim) + r_2*(1-sim_dr)*(t-1);
+            sim_firm_Q_1(i,t,sim) = firms_q_1(i,2);
+            sim_firm_Q_2(i,t,sim) = firms_q_2(i,2);
+            
         end
         %update the states for the next period
         [sim_dperm_1] = demandPermChange(sim_dperm_1, market_p_1(2));

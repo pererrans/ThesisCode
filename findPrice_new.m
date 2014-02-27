@@ -1,4 +1,4 @@
-function [ market_p, market_q, cap_util, rewards, faces] = findPrice_new(T, numFirms, t, MinesOpened, DPERM, DPERM_change, el, D_prob, D_fluct, D_t, D_0, SupplyCurve_t, a, IncentiveCurve)
+function [ market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened, DPERM, DPERM_change, el, D_prob, D_fluct, D_t, D_0, SupplyCurve_t, a, IncentiveCurve)
 % Yuanjian Carla Li, January 28, 2013
 % The purpose of this model is to figure out the equilibrium price and 
 % quantity for each of the players, given the set of actions, the state 
@@ -26,8 +26,15 @@ market_p = zeros(1,length(D_prob));
 market_q = zeros(1,length(D_prob));
 rewards = zeros(numFirms,length(D_prob));
 costs = zeros(numFirms,length(D_prob));
-
+firms_q = zeros(numFirms, length(D_prob));
 cap_util = zeros(1,length(D_prob));
+
+%diag records the diagnostic information about this function for the 3
+%demand scenarios (each row a different demand scenario)
+%the info: price (by the demand function
+diag = cell(length(D_prob)+1,6);
+diag(1,:) = {'p_demand','q_demand','excess_q','marg_q','marg_cost','marg_firm'};
+
 faces = 0; %initialize the # times demand intersects supply at the supply step cliff face
 excess_q = zeros(1,length(D_prob));
 index = zeros(1,length(D_prob));
@@ -58,7 +65,7 @@ D_t = D_t*(1+(DPERM-3)*(DPERM_change));
 newSupply=sortrows(newSupply,3);    %sort supply by price
 newSupply = [newSupply cumsum(newSupply(:,2))]; %add a column for cumulative supply
 
-D_cases = [1/D_fluct 1 D_fluct];    %MAYBE_TODO: does this loglinear perturbation scheme make sense?
+D_cases = [1/D_fluct 1 D_fluct];    %since D_fluct<1, expansion, base, contraction of demand cases respectively. MAYBE_TODO: does this loglinear perturbation scheme make sense?
 
 
 %determine what the equilibrium Q is for each demand scenario (given the
@@ -70,12 +77,12 @@ for j=1:length(D_cases)
         if(q==0)
             continue;
         end
-        p = X*a*q^(-1/el)*(D_t/D_0)^(1/el);
+        p = X^(1/el)*a*q^(-1/el)*(D_t/D_0)^(1/el);
         %fprintf('demand scenario %d step %d: q=%d, p=%d\n', j, i, q, p);
         if (newSupply(i,3)>=p)
             market_p(j) = newSupply(i,3);
             %fprintf('terminal demand is %d, price is %d\n', D_t, market_p(j));
-            market_q(j) = ((X*a*(D_t/D_0)^(1/el))/market_p(j))^(el);
+            market_q(j) = ((X^(1/el)*a*(D_t/D_0)^(1/el))/market_p(j))^(el);
             excess_q(j) = q - market_q(j);
             cap_util(j) = market_q(j) / q;
             index(j) = i;
@@ -86,15 +93,24 @@ for j=1:length(D_cases)
                 end
             end 
             
+            %store the diagostic data
+            diag{j+1,1} = p; %demand function's price from the full output level
+            diag{j+1,2} = q;  %quantity used to generate the price from the demand function. essentially the full q of all operating units
+            diag{j+1,3} = excess_q(j);    %excess quantity (all operating firms at full capacity - demand
+            diag{j+1,4} = newSupply(i,2); %quantity of marginal mine
+            diag{j+1,5} = newSupply(i,3); %cost of marginal mine
+            diag{j+1,6} = newSupply(i,1); %owner of the marginal mine
+            
             %track the costs of operating mines
             owner = newSupply(i,1);
             if(owner<=numFirms) %only track costs for firms we care about            
                 costs(owner, j) = costs(owner, j) + newSupply(i,3)*newSupply(i,2);
+                firms_q(owner,j) = firms_q(owner,j) + newSupply(i,2);
             end
             
             %calculate rewards of the firms (excluding capex)
             for(firm = 1:numFirms)
-                rewards(firm,j) = cap_util(j)*((market_p(j)*q) - costs(firm,j));
+                rewards(firm,j) = cap_util(j)*((market_p(j)*firms_q(firm,j)) - costs(firm,j));
             end
             break;
         else
@@ -102,6 +118,7 @@ for j=1:length(D_cases)
             owner = newSupply(i,1);
             if(owner<=numFirms) %only track costs for firms we care about
                 costs(owner, j) = costs(owner, j) + newSupply(i,3)*newSupply(i,2);
+                firms_q(owner,j) = firms_q(owner,j) + newSupply(i,2);
             end
         end
         %TODO: insert condition for if demand exceeds all available supply

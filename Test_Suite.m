@@ -92,15 +92,22 @@ diag
 cap_util
 rewards
 
+
+%Great test case to see whether the supplyTruncate mode is working or not.
+%The 3 demand cases here include one that crosses supply at the start of the
+%next-higher-cost mine, and one that crosses supply below the cost of the
+%next higher cost mine
 t=T;
 Demand(t)=2400;
 [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
 Demand(t)
-%TODO: SOMETHING WRONG HERE. price is too high for the corresponding q. 
+
 
 %test what happens if elasticity changes. we should see less demand loss at
 %high demand/high price
-el = 0.5;
+el = 1;
+Demand(t)=2000;
+
 [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
 Demand(t)
 

@@ -1,15 +1,6 @@
 % Exact DP solution and simulation to a 3-player game in the mineral market
 % Yuanjian Carla Li, January 31, 2014
 
-%Global toggles for different modes
-%If true, the MODE_supplyTruncate mode cuts the operating supply where the 
-%demand curve crosses the supply curve, in the case when the demand
-%curve crosses supply between two mines (e.g. vertical part of a supply
-%curve). If false, the mine after crossing is also included in the
-%operating supply, and the utilization rate for all mines is reduced as a
-%result
-global MODE_supplyTruncate;
-MODE_supplyTruncate = true; 
 
 %%initialize variables
 dr = 0.1;
@@ -280,7 +271,7 @@ for t=T:-1:1
                 
                 %record the total number of times the intersection hit the
                 %face of a supply step cliff for a given set of state vars
-                Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = faces + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
+                Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = sum(faces) + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
                 
                 %If it is the best V so far, replace the current best V
                 %TODO: what if they tie?
@@ -343,7 +334,7 @@ for t=T:-1:1
 
                 %record the total number of times the intersection hit the
                 %face of a supply step cliff for a given set of state vars
-                Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = faces + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
+                Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = sum(faces) + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
 
                 %If it is the best V so far, replace the current best V
                 %TODO: what if they tie?
@@ -409,7 +400,7 @@ for t=T:-1:1
 
                 %record the total number of times the intersection hit the
                 %face of a supply step cliff for a given set of state vars
-                Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = faces + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
+                Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = sum(faces) + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
 
                 %If it is the best V so far, replace the current best V
                 %TODO: what if they tie?
@@ -581,8 +572,8 @@ for(sim=1:simNum)
         [market_p_1, market_q_1, cap_util_1, rewards_1, faces_1, firms_q_1, diag_1] = findPrice_new(T, numFirms, t, sim_m_1, sim_dperm_1, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
         [market_p_2, market_q_2, cap_util_2, rewards_2, faces_2, firms_q_2, diag_2] = findPrice_new(T, numFirms, t, sim_m_2, sim_dperm_2, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
         %store the function diagnostics
-        sim_diag_1{t,sim} = diag_1(3,:);	%HARDCODE ALERT
-        sim_diag_2{t,sim} = diag_2(3,:);    %HARDCODE ALERT
+        sim_diag_1{t,sim} = diag_1(3,:);	%HARDCODE ALERT. getting the middle case
+        sim_diag_2{t,sim} = diag_2(3,:);    %HARDCODE ALERT. getting the middle case
         sim_diag_names{1,1} = diag_1(1,:);  %get the names of the variables for the function diagnostics
         
         %record down the results 
@@ -593,8 +584,8 @@ for(sim=1:simNum)
         sim_Q_2(t, sim) = market_q_2(2);
         sim_CapUtil_1(t, sim) = cap_util_1(2);
         sim_CapUtil_2(t, sim) = cap_util_2(2);
-        sim_Faces_1(t, sim) = faces_1;
-        sim_Faces_2(t, sim) = faces_2;
+        sim_Faces_1(t, sim) = faces_1(2);
+        sim_Faces_2(t, sim) = faces_2(2);
         
         for(i=1:numFirms)
             r_1 = rewards_1(i,2) - capex_1(i);
@@ -612,7 +603,5 @@ for(sim=1:simNum)
     end
 end
 
-%Clear the MODE variables to avoid declaring them twice
-clear MODE_supplyTruncate;
 
 %plottings

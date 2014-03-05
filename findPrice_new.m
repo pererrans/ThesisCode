@@ -17,7 +17,15 @@ function [ market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPr
 % value
 %D_fluct is the fluctation in demand, and should be 1 or above
 
-
+%Global toggles for different modes
+%If true, the MODE_supplyTruncate mode cuts the operating supply where the 
+%demand curve crosses the supply curve, in the case when the demand
+%curve crosses supply STRICTLY between the cost levels of two mines (e.g. vertical part of a supply
+%curve). If false, the mine after crossing is also included in the
+%operating supply, and the utilization rate for all mines is reduced as a
+%result
+global MODE_supplyTruncate;
+MODE_supplyTruncate = true; 
 
 %% get variables
 numNewMines = length(MinesOpened);
@@ -37,7 +45,7 @@ cap_util = zeros(1,length(D_prob));
 diag = cell(length(D_prob)+1,6);
 diag(1,:) = {'p_demand','q_demand','excess_q','marg_q','marg_cost','marg_firm'};
 
-faces = 0; %initialize the # times demand intersects supply at the supply step cliff face
+faces = zeros(1,3); %initialize the # times demand intersects supply at the supply step cliff face
 excess_q = zeros(1,length(D_prob));
 index = zeros(1,length(D_prob));
 
@@ -87,10 +95,10 @@ for j=1:length(D_cases)
             throw(err);
             
         %if either the demand curve falls below the marginal supply's cost
-        %at the cumulative q, or it crosses the supply below the cost of
+        %at the cumulative q, or it crosses the supply STRICTLY below the cost of
         %the next marginal mine AND the supplyTruncate mode is on, the
         %marginal mine has been found
-        elseif (newSupply(i,3)>=p || (newSupply(i+1,3)>=p && MODE_supplyTruncate==true))
+        elseif (newSupply(i,3)>=p || (newSupply(i+1,3)>p && MODE_supplyTruncate==true))
             if(newSupply(i,3)>=p)
                 market_p(j) = newSupply(i,3);
                 %fprintf('terminal demand is %d, price is %d\n', D_t, market_p(j));
@@ -101,7 +109,7 @@ for j=1:length(D_cases)
             else
                 market_p(j) = p; %price is determined by demand in this case
                 market_q(j) = q; %quantity is the entire amount
-                faces = faces+1;
+                faces(j) = faces(j)+1;
             end
             excess_q(j) = q - market_q(j);
             cap_util(j) = market_q(j) / q;
@@ -109,9 +117,9 @@ for j=1:length(D_cases)
             
             %check if the demand curve crosses cliff face of supply step.
             %this would only activate if the MODE_supplyTruncate is off
-            if(i>1 && MODE_supplyTruncate==false)
+            if(i>1)
                 if(market_q(j)<=newSupply(i-1,4))
-                    faces = faces+1;
+                    faces(j) = faces(j)+1;
                 end
             end 
             
@@ -152,6 +160,8 @@ for j=1:length(D_cases)
     end
 end
 
+%Clear the MODE variables to avoid declaring them twice
+clear MODE_supplyTruncate;
 
 end
 

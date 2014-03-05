@@ -17,6 +17,8 @@ function [ market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPr
 % value
 %D_fluct is the fluctation in demand, and should be 1 or above
 
+
+
 %% get variables
 numNewMines = length(MinesOpened);
 numOldMines = length(SupplyCurve_t);
@@ -79,15 +81,35 @@ for j=1:length(D_cases)
         end
         p = X^(1/el)*a*q^(-1/el)*(D_t/D_0)^(1/el);
         %fprintf('demand scenario %d step %d: q=%d, p=%d\n', j, i, q, p);
-        if (newSupply(i,3)>=p)
-            market_p(j) = newSupply(i,3);
-            %fprintf('terminal demand is %d, price is %d\n', D_t, market_p(j));
-            market_q(j) = ((X^(1/el)*a*(D_t/D_0)^(1/el))/market_p(j))^(el);
+        if(i==length(newSupply))
+            err = MException('ResultChk:SupplyOutOfRange', ...
+                'RAN OUT OF SUPPLY CURVE! PLEASE ADD TO SUPPLY CURVE');
+            throw(err);
+            
+        %if either the demand curve falls below the marginal supply's cost
+        %at the cumulative q, or it crosses the supply below the cost of
+        %the next marginal mine AND the supplyTruncate mode is on, the
+        %marginal mine has been found
+        elseif (newSupply(i,3)>=p || (newSupply(i+1,3)>=p && MODE_supplyTruncate==true))
+            if(newSupply(i,3)>=p)
+                market_p(j) = newSupply(i,3);
+                %fprintf('terminal demand is %d, price is %d\n', D_t, market_p(j));
+                market_q(j) = ((X^(1/el)*a*(D_t/D_0)^(1/el))/market_p(j))^(el);
+            
+            %if in truncate mode and the demand crosses between this mine
+            %and the next, truncate and set price accordingly
+            else
+                market_p(j) = p; %price is determined by demand in this case
+                market_q(j) = q; %quantity is the entire amount
+                faces = faces+1;
+            end
             excess_q(j) = q - market_q(j);
             cap_util(j) = market_q(j) / q;
             index(j) = i;
-            %check if the demand curve crosses cliff face of supply step
-            if(i>1)
+            
+            %check if the demand curve crosses cliff face of supply step.
+            %this would only activate if the MODE_supplyTruncate is off
+            if(i>1 && MODE_supplyTruncate==false)
                 if(market_q(j)<=newSupply(i-1,4))
                     faces = faces+1;
                 end
@@ -112,7 +134,12 @@ for j=1:length(D_cases)
             for(firm = 1:numFirms)
                 rewards(firm,j) = cap_util(j)*((market_p(j)*firms_q(firm,j)) - costs(firm,j));
             end
+            
+            %adjust the firm_q for capacity utilization 
+            firms_q(:,j) = firms_q(:,j).*cap_util(j);
+            
             break;
+        
         else
             %track the costs of operating mines
             owner = newSupply(i,1);
@@ -121,8 +148,6 @@ for j=1:length(D_cases)
                 firms_q(owner,j) = firms_q(owner,j) + newSupply(i,2);
             end
         end
-        %TODO: insert condition for if demand exceeds all available supply
-        %then error
         
     end
 end

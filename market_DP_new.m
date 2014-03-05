@@ -1,5 +1,15 @@
-% New version of the exact DP to accomodate multiple players
+% Exact DP solution and simulation to a 3-player game in the mineral market
 % Yuanjian Carla Li, January 31, 2014
+
+%Global toggles for different modes
+%If true, the MODE_supplyTruncate mode cuts the operating supply where the 
+%demand curve crosses the supply curve, in the case when the demand
+%curve crosses supply between two mines (e.g. vertical part of a supply
+%curve). If false, the mine after crossing is also included in the
+%operating supply, and the utilization rate for all mines is reduced as a
+%result
+global MODE_supplyTruncate;
+MODE_supplyTruncate = true; 
 
 %%initialize variables
 dr = 0.1;
@@ -28,12 +38,13 @@ CapUtils = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
 Faces = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
 
 %%Demand settings
+%demand elasticity
+el = 1; 
 %demand level and growth
 %D_0 = 1100;   %base demand
 D_0 = 1600;   %base demand
 
 D_growth = 0;   %demand growth rate
-el = 1; %demand elasticity
 %populate the demand series 
 Demand = ones(1,T)*D_0;
 for i=2:T
@@ -140,6 +151,7 @@ end
 %                     3	45	54	544
 %                     3	45	67	1135];
 
+%Dummy Incentive Curves
 IncentiveCurveA = [1	5	9	10
                     1	5	10	10
                     1	5	11	10];
@@ -153,13 +165,13 @@ IncentiveCurveC = [3	5	9	10
                     3	5	11	10];
 
                 
-                
+%Put all the incentive curves together into master incentive curve                
 TotalIncentiveCurve = [IncentiveCurveA(1:numIncMines, :); 
                         IncentiveCurveB(1:numIncMines, :);
                         IncentiveCurveC(1:numIncMines, :)];
 
 %calculate the coefficient a for the demand function
-%P=X*a*Q^(-1/elasticity)*(1+g)^(1/elasticity)
+%P=X^(1/elasticity)*a*Q^(-1/elasticity)*(1+g)^(1/elasticity)
 %a will remain the same throughout the time periods
 baseQ = D_0; %where base demand and supply should meet
 SupplyCurve_0=sortrows(SupplyCurve(:,:,1),3);    %sort supply by price
@@ -228,11 +240,11 @@ for t=T:-1:1
                 %skip this loop if a is not feasible
                 %given the states
                 if(a==1 && A1==2)
-                    break;
+                    continue;  %DEBUG: SHOULD THIS BE CONTINUE?
                 elseif(a==2 && A2==2)
-                    break;
+                    continue;
                 elseif(a==3 && A3==2)
-                    break;
+                    continue;
                 end
                 %calculate the relevant outcome for A given this action
                 %TODO: could incorporate delay in opening (currently no
@@ -293,11 +305,11 @@ for t=T:-1:1
                 %skip this loop if b is not feasible
                 %given the states
                 if(b==1 && B1==2)
-                    break;
+                    continue;
                 elseif(b==2 && B2==2)
-                    break;
+                    continue;
                 elseif(b==3 && B3==2)
-                    break;
+                    continue;
                 end
                 %calculate the relevant outcome for A given this action
                 MinesOpened_updated = MinesOpened + [0,0,0,(b==1),(b==2),(b==3),0,0,0];
@@ -356,11 +368,11 @@ for t=T:-1:1
                 %skip this loop if c is not feasible
                 %given the states
                 if(c==1 && C1==2)
-                    break;
+                    continue;
                 elseif(c==2 && C2==2)
-                    break;
+                    continue;
                 elseif(c==3 && C3==2)
-                    break;
+                    continue;
                 end
                 %calculate the relevant outcome for A given this action
                 MinesOpened_updated = MinesOpened + [0,0,0,0,0,0,(c==1),(c==2),(c==3)];
@@ -562,7 +574,7 @@ for(sim=1:simNum)
 
         end
         
-        %simulate the demand shock
+        %simulate the demand perturbation
         D_index = randsample(length(sim_D_prob), 1, true, sim_D_prob);
         D_cases = sim_Demand(t).*[1/sim_D_fluct 1 sim_D_fluct];
         sim_demand = D_cases(D_index);
@@ -599,5 +611,8 @@ for(sim=1:simNum)
 
     end
 end
+
+%Clear the MODE variables to avoid declaring them twice
+clear MODE_supplyTruncate;
 
 %plottings

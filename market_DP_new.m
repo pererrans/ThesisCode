@@ -1,15 +1,17 @@
 % Exact DP solution and simulation to a 3-player game in the mineral market
 % Yuanjian Carla Li, January 31, 2014
 
+%record the profile for performance enhancement
+profile on %-detail builtin -history
 
 %%initialize variables
 dr = 0.1;
-T = 9; 
+T = 24; 
 numFirms = 3; %number of firms
 numIncMines = 3; %number of incentive mines per firm
 %specify the order that the firms will make decision in. 2 in period t
 %indicates that firm 2 will make a decision in t=2
-orderOfFirms = repmat([1:numFirms],1,ceil((T+1)/numFirms)); 
+orderOfFirms = repmat([1 3 2],1,ceil((T+1)/numFirms));  %HARDCODE ALERT
 orderOfFirms = orderOfFirms(1:T+1);
 %the number of dimensions is the number of state variables + 1
 %the length of each dimension is the number of states available to a state
@@ -33,7 +35,7 @@ Faces = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
 el = 1; 
 %demand level and growth
 %D_0 = 1100;   %base demand
-D_0 = 1600;   %base demand
+D_0 = 1300;   %base demand
 
 D_growth = 0;   %demand growth rate
 %populate the demand series 
@@ -52,73 +54,75 @@ D_prob = [0,1,0];
 DPERM_change = 0.1; % +10% change in non-shocked demand if DPERM is 1, and 20% if it's 2. 
 
 
-% %%Supply curve - assume it doesn't change over time
-% % structure is owner, quantity, cost
-% SupplyCurve = zeros(94,3,T);
-% SupplyCurve(1:44,:,1) = [1	289	49
-%             1	12	65
-%             1	5	86
-%             2	74	39
-%             2	40	46
-%             2	42	47
-%             2	24	48
-%             2	25	49
-%             3	46	40
-%             3	2	40
-%             3	50	42
-%             3	9	43
-%             3	3	44
-%             3	102	46
-%             3	24	47
-%             3	5	54
-%             3	4	55
-%             3	2	66
-%             3	6	76
-%             3	21	76
-%             3	9	96
-%             4	0	5
-%             4	16	15
-%             4	9	25
-%             4	15	35
-%             4	49	45
-%             4	169	55
-%             4	209	65
-%             4	150	75
-%             4	95	85
-%             4	72	95
-%             4	70	105
-%             4	48	115
-%             4	15	125
-%             4	22	135
-%             4	27	145
-%             4	4	155
-%             4	4	165
-%             4	2	175
-%             4	1	185
-%             4	3	195
-%             4	3	205
-%             4	3	225
-%             4	10	245];  
-% %inflate highest price Q to never run out of supply
-% highcostQ = repmat([4 2 245], 50,1);
-% SupplyCurve(45:94,:,1) = highcostQ;
-% SupplyCurve(:,:,1) = sortrows(SupplyCurve(:,:,1),3);
-
-%DUMMY Supply Curve
-SupplyCurve = zeros(12,3,T);
-SupplyCurve(:,:,1) = [  1	200	50
-                        1	200	100
-                        1	200	150
-                        1	200	200
-                        2	200	50
-                        2	200	100
-                        2	200	150
-                        2	200	200
-                        3	200	50
-                        3	200	100
-                        3	200	150
-                        3	200	200];
+%%Supply curve - assume it doesn't change over time
+% structure is owner, quantity, cost
+SupplyCurve = zeros(94,3,T);
+SupplyCurve(1:44,:,1) = [1	289	49
+            1	12	65
+            1	5	86
+            2	74	39
+            2	40	46
+            2	42	47
+            2	24	48
+            2	25	49
+            3	46	40
+            3	2	40
+            3	50	42
+            3	9	43
+            3	3	44
+            3	102	46
+            3	24	47
+            3	5	54
+            3	4	55
+            3	2	66
+            3	6	76
+            3	21	76
+            3	9	96
+            4	0	5
+            4	16	15
+            4	9	25
+            4	15	35
+            4	49	45
+            4	169	55
+            4	209	65
+            4	150	75
+            4	95	85
+            4	72	95
+            4	70	105
+            4	48	115
+            4	15	125
+            4	22	135
+            4	27	145
+            4	4	155
+            4	4	165
+            4	2	175
+            4	1	185
+            4	3	195
+            4	3	205
+            4	3	225
+            4	10	245];  
+%inflate highest price Q to never run out of supply
+highcostQ = repmat([4 2 245], 50,1);
+SupplyCurve(45:94,:,1) = highcostQ;
 SupplyCurve(:,:,1) = sortrows(SupplyCurve(:,:,1),3);
+
+% %DUMMY Supply Curve
+% SupplyCurve = zeros(12,3,T);
+% SupplyCurve(:,:,1) = [  1	200	50
+%                         1	200	100
+%                         1	200	150
+%                         1	200	200
+%                         2	200	50
+%                         2	200	100
+%                         2	200	150
+%                         2	200	200
+%                         3	200	50
+%                         3	200	100
+%                         3	200	150
+%                         3	200	200];
+% SupplyCurve(:,:,1) = sortrows(SupplyCurve(:,:,1),3);
+%
+% %END OF DUMMY SUPPLY CURVE 
 
 
 %Assume a base supply curve that is constant over the time periods
@@ -127,34 +131,34 @@ for t=2:T
     SupplyCurve(:,:,t) = SupplyCurve(:,:,1);
 end
 
-%%Settings for new mines. The columns are ownerID, capacity, opex, and
-%%capex respectively
+%Settings for new mines. The columns are ownerID, capacity, opex, and
+%capex respectively
 
-% IncentiveCurveA = [1	70	43	560
-%                     1	50	47	1025
-%                     1	50	49	1042];
+IncentiveCurveA = [1	70	43	560
+                    1	50	47	1025
+                    1	50	49	1042];
+
+IncentiveCurveB = [2	50	52	963
+                    2	110	57	2821
+                    2	55	49	1075];
+
+IncentiveCurveC = [3	90	54	1670
+                    3	45	54	544
+                    3	45	67	1135];
+
+% %Dummy Incentive Curves
+% IncentiveCurveA = [1	5	9	10
+%                     1	5	10	10
+%                     1	5	11	10];
 % 
-% IncentiveCurveB = [2	50	52	963
-%                     2	110	57	2821
-%                     2	55	49	1075];
+% IncentiveCurveB = [2	5	9	10
+%                     2	5	10	10
+%                     2	5	11	10];
 % 
-% IncentiveCurveC = [3	90	54	1670
-%                     3	45	54	544
-%                     3	45	67	1135];
-
-%Dummy Incentive Curves
-IncentiveCurveA = [1	5	9	10
-                    1	5	10	10
-                    1	5	11	10];
-
-IncentiveCurveB = [2	5	9	10
-                    2	5	10	10
-                    2	5	11	10];
-
-IncentiveCurveC = [3	5	9	10
-                    3	5	10	10
-                    3	5	11	10];
-
+% IncentiveCurveC = [3	5	9	10
+%                     3	5	10	10
+%                     3	5	11	10];
+% %END OF DUMMY INCENTIVE CURVE
                 
 %Put all the incentive curves together into master incentive curve                
 TotalIncentiveCurve = [IncentiveCurveA(1:numIncMines, :); 
@@ -554,13 +558,13 @@ for(sim=1:simNum)
             sim_m_1 = sim_m_1 + [0,0,0,0,0,0,(c_1==1),(c_1==2),(c_1==3)];
             sim_m_2 = sim_m_2 + [0,0,0,0,0,0,(c_2==1),(c_2==2),(c_2==3)];
             if(c_1~=0)
-                    capex_1(firm) = IncentiveCurveC(a_1,4);
+                    capex_1(firm) = IncentiveCurveC(c_1,4);
                     sim_openings_1(c_1,firm, sim) = t;
             end
             
             if(c_2~=0)
-                    capex_2(firm) = IncentiveCurveC(a_2,4);
-                    sim_openings_2(a_2,firm, sim) = t;
+                    capex_2(firm) = IncentiveCurveC(c_2,4);
+                    sim_openings_2(c_2,firm, sim) = t;
             end
 
         end
@@ -577,7 +581,6 @@ for(sim=1:simNum)
         sim_diag_names{1,1} = diag_1(1,:);  %get the names of the variables for the function diagnostics
         
         %record down the results 
-        %TODO: the correct # faces is brute-forced instead of adjusted for in findPrice function. Fix this.
         sim_Prices_1(t, sim) = market_p_1(2);
         sim_Prices_2(t, sim) = market_p_2(2);
         sim_Q_1(t, sim) = market_q_1(2);
@@ -605,3 +608,67 @@ end
 
 
 %plottings
+%compare the price
+fig = figure;
+time = 1:T;
+plot(time, sim_Prices_1, time, sim_Prices_2);
+
+leg1 = legend('base policy', 'best policy');
+set(leg1, 'Box', 'off');
+set(leg1, 'Color', 'none');
+
+
+title('Price Path');
+xlabel('Period (t)');
+ylabel('Real price');
+
+saveas(fig, 'price path.jpg'); 
+
+%compare the market quantity over time
+fig = figure(2);
+plot(time, sim_Q_1, time, sim_Q_2);
+
+leg1 = legend('base policy', 'best policy');
+set(leg1, 'Box', 'off');
+set(leg1, 'Color', 'none');
+
+title('Market Clearing Quantity');
+xlabel('Period (t)');
+ylabel('Quantity');
+hold off
+
+%compare individual firm production quantity over time
+display('policy 1 openings (row = mine #, column = firm #)');
+sim_openings_1
+display('policy 2 openings (row = mine #, column = firm #)');
+sim_openings_2
+sim_V_1
+sim_V_2
+
+saveas(fig, 'production path.jpg'); 
+
+%compare the value (NPV) of the firms in the two scenarios
+fig = figure(3);
+x = 1:numFirms;
+width1 = 0.5;
+bar(x, sim_V_1, width1, 'FaceColor',[0.2,0.2,0.5],....
+                     'EdgeColor','none');
+hold on
+width2 = width1/2;
+bar(x, sim_V_2, width2,'FaceColor',[0,0.7,0.7],...
+                     'EdgeColor',[0,0.7,0.7]);
+legend('Policy 1', 'Policy 2');
+title('NPV Comparison');
+xlabel('Firm');
+ylabel('NPV');
+hold off
+saveas(fig, 'price path.jpg'); 
+
+
+%TODO: publish - save the graphs to file
+
+%Report the recorded profile
+profile report
+
+%%DEMONSTRATION THAT THE POLICY IS INDEED OPTIMAL
+

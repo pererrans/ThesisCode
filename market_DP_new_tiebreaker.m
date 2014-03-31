@@ -7,12 +7,12 @@ rng(1); %set seed for random number
 
 %%initialize variables
 dr = 0.1;
-T = 24; 
+T = 12; 
 numFirms = 3; %number of firms
 numIncMines = 3; %number of incentive mines per firm
 %specify the order that the firms will make decision in. 2 in period t
 %indicates that firm 2 will make a decision in t=2
-orderOfFirms = repmat([3 2 1],1,ceil((T+1)/numFirms));  %HARDCODE ALERT
+orderOfFirms = repmat([1 2 3],1,ceil((T+1)/numFirms));  %HARDCODE ALERT
 orderOfFirms = orderOfFirms(1:T+1);
 fprintf('The order of firms is:  ');
 disp(orderOfFirms);
@@ -521,112 +521,24 @@ sim_firm_Q_2 = zeros(numFirms, T, simNum);
 %name of the diagnostic entries
 sim_diag_names = cell(1,1);
 
-for(sim=1:simNum)
-    %initialize the state variables
-    sim_m_1 = ones(1,numFirms*numIncMines);
-    sim_m_2 = ones(1,numFirms*numIncMines);
-    sim_dperm_1 = 3;
-    sim_dperm_2 = 3;
+%simulate for policy 1 and policy 2
+[sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1, sim_diag_names] ...
+    = simulation(Xa_1, Xb_1, Xc_1, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
+    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
 
+[sim_openings_2, sim_Prices_2, sim_Q_2, sim_firm_Q_2, sim_V_2, sim_Vt_2, sim_CapUtil_2, sim_Faces_2, sim_diag_2, sim_diag_names] ...
+    = simulation(Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
+    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
 
-    for(t=1:T)
-        firm = sim_orderOfFirms(t);
-        capex_1=zeros(1,numFirms);
-        capex_2=zeros(1,numFirms);
-        
-        if(firm==1)
-            a_1 = Xa_1(sim_m_1(1), sim_m_1(2), sim_m_1(3), sim_m_1(4), sim_m_1(5), sim_m_1(6), sim_m_1(7), sim_m_1(8), sim_m_1(9), firm, sim_dperm_1, t);
-            a_2 = Xa_2(sim_m_2(1), sim_m_2(2), sim_m_2(3), sim_m_2(4), sim_m_2(5), sim_m_2(6), sim_m_2(7), sim_m_2(8), sim_m_2(9), firm, sim_dperm_2, t);
-            
-            sim_m_1 = sim_m_1 + [(a_1==1),(a_1==2),(a_1==3),0,0,0,0,0,0];
-            sim_m_2 = sim_m_2 + [(a_2==1),(a_2==2),(a_2==3),0,0,0,0,0,0];
-            
-            %if there is a new opening, record it and add to capex
-            if(a_1~=0)
-                    capex_1(firm) = IncentiveCurveA(a_1,4);
-                    sim_openings_1(a_1,firm, sim) = t;
-            end
-            
-            if(a_2~=0)
-                    capex_2(firm) = IncentiveCurveA(a_2,4);
-                    sim_openings_2(a_2,firm, sim) = t;
-            end
-
-        elseif(firm==2)
-            b_1 = Xb_1(sim_m_1(1), sim_m_1(2), sim_m_1(3), sim_m_1(4), sim_m_1(5), sim_m_1(6), sim_m_1(7), sim_m_1(8), sim_m_1(9), firm, sim_dperm_1, t);
-            b_2 = Xb_2(sim_m_2(1), sim_m_2(2), sim_m_2(3), sim_m_2(4), sim_m_2(5), sim_m_2(6), sim_m_2(7), sim_m_2(8), sim_m_2(9), firm, sim_dperm_2, t);
-            sim_m_1 = sim_m_1 + [0,0,0,(b_1==1),(b_1==2),(b_1==3),0,0,0];
-            sim_m_2 = sim_m_2 + [0,0,0,(b_2==1),(b_2==2),(b_2==3),0,0,0];
-            if(b_1~=0)
-                    capex_1(firm) = IncentiveCurveB(b_1,4);
-                    sim_openings_1(b_1,firm, sim) = t;
-            end
-            
-            if(b_2~=0)
-                    capex_2(firm) = IncentiveCurveB(b_2,4);
-                    sim_openings_2(b_2,firm, sim) = t;
-            end
-
-        elseif(firm==3)
-            c_1 = Xc_1(sim_m_1(1), sim_m_1(2), sim_m_1(3), sim_m_1(4), sim_m_1(5), sim_m_1(6), sim_m_1(7), sim_m_1(8), sim_m_1(9), firm, sim_dperm_1, t);
-            c_2 = Xc_2(sim_m_2(1), sim_m_2(2), sim_m_2(3), sim_m_2(4), sim_m_2(5), sim_m_2(6), sim_m_2(7), sim_m_2(8), sim_m_2(9), firm, sim_dperm_2, t);
-            sim_m_1 = sim_m_1 + [0,0,0,0,0,0,(c_1==1),(c_1==2),(c_1==3)];
-            sim_m_2 = sim_m_2 + [0,0,0,0,0,0,(c_2==1),(c_2==2),(c_2==3)];
-            if(c_1~=0)
-                    capex_1(firm) = IncentiveCurveC(c_1,4);
-                    sim_openings_1(c_1,firm, sim) = t;
-            end
-            
-            if(c_2~=0)
-                    capex_2(firm) = IncentiveCurveC(c_2,4);
-                    sim_openings_2(c_2,firm, sim) = t;
-            end
-
-        end
-        
-        %simulate the demand perturbation
-        D_index = randsample(length(sim_D_prob), 1, true, sim_D_prob);
-        D_cases = sim_Demand(t).*[1/sim_D_fluct 1 sim_D_fluct];
-        sim_demand = D_cases(D_index);
-        [market_p_1, market_q_1, cap_util_1, rewards_1, faces_1, firms_q_1, diag_1] = findPrice_new(T, numFirms, t, sim_m_1, sim_dperm_1, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
-        [market_p_2, market_q_2, cap_util_2, rewards_2, faces_2, firms_q_2, diag_2] = findPrice_new(T, numFirms, t, sim_m_2, sim_dperm_2, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
-        %store the function diagnostics
-        sim_diag_1{t,sim} = diag_1(3,:);	%HARDCODE ALERT. getting the middle case
-        sim_diag_2{t,sim} = diag_2(3,:);    %HARDCODE ALERT. getting the middle case
-        sim_diag_names{1,1} = diag_1(1,:);  %get the names of the variables for the function diagnostics
-        
-        %record down the results 
-        sim_Prices_1(t, sim) = market_p_1(2);
-        sim_Prices_2(t, sim) = market_p_2(2);
-        sim_Q_1(t, sim) = market_q_1(2);
-        sim_Q_2(t, sim) = market_q_2(2);
-        sim_CapUtil_1(t, sim) = cap_util_1(2);
-        sim_CapUtil_2(t, sim) = cap_util_2(2);
-        sim_Faces_1(t, sim) = faces_1(2);
-        sim_Faces_2(t, sim) = faces_2(2);
-        
-        for(i=1:numFirms)
-            r_1 = rewards_1(i,2) - capex_1(i);
-            r_2 = rewards_2(i,2) - capex_2(i);
-            sim_V_1(i, sim) = sim_V_1(i, sim) + r_1*(1-sim_dr)^(t-1);
-            sim_V_2(i, sim) = sim_V_2(i, sim) + r_2*(1-sim_dr)^(t-1);
-            sim_firm_Q_1(i,t,sim) = firms_q_1(i,2);
-            sim_firm_Q_2(i,t,sim) = firms_q_2(i,2);
-            
-        end
-        %update the states for the next period
-        [sim_dperm_1] = demandPermChange(sim_dperm_1, market_p_1(2));
-        [sim_dperm_2] = demandPermChange(sim_dperm_2, market_p_2(2));
-
-    end
-end
-
-
-%plottings
+%Plots for comparison the price, quantity and NPV outcomes under policy 1 and 2
 %compare the price
 fig = figure;
 time = 1:T;
 plot(time, sim_Prices_1, time, sim_Prices_2);
+axis([min(time) max(time) min(min(sim_Prices_1),min(sim_Prices_2))-5, max(max(sim_Prices_1),max(sim_Prices_2))+5])
+fprintf('Price path of base vs best policy\n');
+sim_Prices_1
+sim_Prices_2
 
 leg1 = legend('base policy', 'best policy');
 set(leg1, 'Box', 'off');
@@ -642,6 +554,11 @@ saveas(fig, 'price path.jpg');
 %compare the market quantity over time
 fig = figure(2);
 plot(time, sim_Q_1, time, sim_Q_2);
+axis([min(time) max(time) min(min(sim_Q_1),min(sim_Q_2))-50, max(max(sim_Q_1),max(sim_Q_2))+50])
+
+fprintf('Quantity path of base vs best policy\n');
+sim_Q_1
+sim_Q_2
 
 leg1 = legend('base policy', 'best policy');
 set(leg1, 'Box', 'off');
@@ -680,7 +597,6 @@ hold off
 saveas(fig, 'NPV comparison.jpg'); 
 
 
-
 %%DEMONSTRATION THAT THE POLICY IS OPTIMAL
 %1. when the other firms adopt other policies, they won't have better
 %payoff
@@ -699,179 +615,68 @@ sim_Demand = Demand;
 %swings because of semi-permanent substitution (DPERM)
 sim_DPERM_change = 0.1; % +10% change in non-shocked demand if DPERM is 1, and 20% if it's 2. 
 
-%simulate a number of divergences from the optimal policy based on the original optimal policy
-varywho=3; %vary the strategy for A
-%what are the outcomes when A randomizes its strategy
-[sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1] ...
-    = sim_variations(varywho, Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
-sim_openings_1;
+%simulate a number of random policies for each firm in turn to see if they
+%can get a better value by diverging from the optimal policy
+firmNames = ['A' 'B' 'C' 'D'];
+for varywho = 1:numFirms
+    [sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1] ...
+        = sim_variations(varywho, Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
+        IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
+    sim_openings_1;
 
-%Graph the different NPV 
-%overall NPV bar graph
-fig = figure(4);
+    %Graph the different NPV 
+    %overall NPV bar graph
+    fig = figure(3+varywho);
 
-%graph for A
-subplot(3,1,1);
-width1 = 0.5;
-bar(1, sim_V_2(1), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(1,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for A');
-ylabel('NPV');
-hold off
+    %graph for A
+    subplot(3,1,1);
+    width1 = 0.5;
+    bar(1, sim_V_2(1), width1, 'FaceColor',[0.2,0.2,0.5],....
+                         'EdgeColor','none');
+    hold on
+    width2 = width1/2;
+    bar(2:simNum+1, sim_V_1(1,:), width2,'FaceColor',[0,0.7,0.7],...
+                         'EdgeColor',[0,0.7,0.7]);
+    %legend('Optimal Policy for A', 'Other Policies for A');
+    title('NPV Comparison for A');
+    ylabel('NPV');
+    hold off
 
-%graph for B
-subplot(3,1,2);
-width1 = 0.5;
-bar(1, sim_V_2(2), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(2,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for B');
-ylabel('NPV');
-hold off
+    %graph for B
+    subplot(3,1,2);
+    width1 = 0.5;
+    bar(1, sim_V_2(2), width1, 'FaceColor',[0.2,0.2,0.5],....
+                         'EdgeColor','none');
+    hold on
+    width2 = width1/2;
+    bar(2:simNum+1, sim_V_1(2,:), width2,'FaceColor',[0,0.7,0.7],...
+                         'EdgeColor',[0,0.7,0.7]);
+    %legend('Optimal Policy for A', 'Other Policies for A');
+    title('NPV Comparison for B');
+    ylabel('NPV');
+    hold off
 
-%graph for C
-subplot(3,1,3);
-width1 = 0.5;
-bar(1, sim_V_2(3), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(3,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for C');
-ylabel('NPV');
-hold off
+    %graph for C
+    subplot(3,1,3);
+    width1 = 0.5;
+    bar(1, sim_V_2(3), width1, 'FaceColor',[0.2,0.2,0.5],....
+                         'EdgeColor','none');
+    hold on
+    width2 = width1/2;
+    bar(2:simNum+1, sim_V_1(3,:), width2,'FaceColor',[0,0.7,0.7],...
+                         'EdgeColor',[0,0.7,0.7]);
+    %legend('Optimal Policy for A', 'Other Policies for A');
+    title('NPV Comparison for C');
+    ylabel('NPV');
+    hold off
 
-saveas(fig, 'NPV_variations C.jpg'); 
-
-
-%%MAKE MORE EFFICIENT LATER
-
-%simulate a number of divergences from the optimal policy based on the original optimal policy
-varywho=2; %vary the strategy for A
-%what are the outcomes when A randomizes its strategy
-[sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1] ...
-    = sim_variations(varywho, Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
-sim_openings_1;
-
-%Graph the different NPV 
-%overall NPV bar graph
-fig = figure(4);
-
-%graph for A
-subplot(3,1,1);
-width1 = 0.5;
-bar(1, sim_V_2(1), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(1,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for A');
-ylabel('NPV');
-hold off
-
-%graph for B
-subplot(3,1,2);
-width1 = 0.5;
-bar(1, sim_V_2(2), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(2,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for B');
-ylabel('NPV');
-hold off
-
-%graph for C
-subplot(3,1,3);
-width1 = 0.5;
-bar(1, sim_V_2(3), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(3,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for C');
-ylabel('NPV');
-hold off
-
-saveas(fig, 'NPV_variations B.jpg'); 
-
-%%TODO MAKE MORE EFFICIENT
-
-%simulate a number of divergences from the optimal policy based on the original optimal policy
-varywho=1; %vary the strategy for A
-%what are the outcomes when A randomizes its strategy
-[sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1] ...
-    = sim_variations(varywho, Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
-sim_openings_1;
-
-%Graph the different NPV 
-%overall NPV bar graph
-fig = figure(4);
-
-%graph for A
-subplot(3,1,1);
-width1 = 0.5;
-bar(1, sim_V_2(1), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(1,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for A');
-ylabel('NPV');
-hold off
-
-%graph for B
-subplot(3,1,2);
-width1 = 0.5;
-bar(1, sim_V_2(2), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(2,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for B');
-ylabel('NPV');
-hold off
-
-%graph for C
-subplot(3,1,3);
-width1 = 0.5;
-bar(1, sim_V_2(3), width1, 'FaceColor',[0.2,0.2,0.5],....
-                     'EdgeColor','none');
-hold on
-width2 = width1/2;
-bar(2:simNum+1, sim_V_1(3,:), width2,'FaceColor',[0,0.7,0.7],...
-                     'EdgeColor',[0,0.7,0.7]);
-%legend('Optimal Policy for A', 'Other Policies for A');
-title('NPV Comparison for C');
-ylabel('NPV');
-hold off
-
-saveas(fig, 'NPV_variations A.jpg'); 
-
+    annotation('textbox', [0 0.9 1 0.1], ...
+    'String', sprintf( 'NPV Variations %s', firmNames(varywho)), ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center')
+    
+    saveas(fig,  sprintf( 'NPV_variations %s.jpg', firmNames(varywho)) ); 
+end
 
 
 %Report the recorded performance diagnostic profile

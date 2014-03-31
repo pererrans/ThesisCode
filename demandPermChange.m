@@ -13,8 +13,19 @@ P_high_25 = 85;
 P_low_10 = 40;
 P_low_25 = 46;
 
-temp_DPERM = DPERM + (price>=P_high_10) + (price>=P_high_25) - (price<=P_low_10) - (price<=P_low_25);
+temp_DPERM = DPERM - (price>=P_high_10) - (price>=P_high_25) + (price<=P_low_10) + (price<=P_low_25);
 nextDPerm = min(max(temp_DPERM, 1),5);
+
+%if the price has not reached the extreme price levels required by the second
+%level of price shift, then DPERM cannot shift beyond the first level of
+%price shift. i.e. if DPERM is 2 now, and the price is higher than
+%P_high_25 but not P_high_10, then DPERM will not shift to 1 but will instead
+%stay at 2. 
+if(and(price>P_low_10, price<P_high_10))
+    if(and(DPERM>1, DPERM<5))
+        nextDPerm = min(max(temp_DPERM, 2),4);
+    end
+end
 
 end
 

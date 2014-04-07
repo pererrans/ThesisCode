@@ -408,17 +408,15 @@ for(sim=1:simNum3)
             %update the states for the next period
             [Dperm] = demandPermChange(Dperm, market_p_3(2));
             
-                % 	Let the demand perturbation be realized according to the probabilities
-        % 	Calculate the market clearing price and quantities in this period; record them
-        % 	Record any permanent shift to the demand according to the price
-        % 	For each firm, record overall firm NPV from t=1 up to this period
-        % Go to the next period t+1
+        end
+    end
+end
 
 
 
 
-
-
+%%CALCULATION FOR OPTIMAL POLICY WITH GAME THEORY AND WHOLE FIRM NPV
+%%CONSIDERATION
 
 %value for terminal period
 %MAYBETODO: terminal state do not need to be everything shut down

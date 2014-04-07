@@ -1,27 +1,9 @@
 % Exact DP solution and simulation to a 3-player game in the mineral market
-% Yuanjian Carla Li, version April 1, 2014
-
-%naming for the output in terms of firm decision ordering
-ordering = 'CBA'; 
-
-switch ordering
-    case 'ABC'
-        decision_order = [1 2 3];
-    case 'ACB' 
-        decision_order = [1 3 2];
-    case 'BAC' 
-        decision_order = [2 1 3];
-    case 'BCA' 
-        decision_order = [2 3 1];
-    case 'CAB' 
-        decision_order = [3 1 2];
-    case 'CBA' 
-        decision_order = [3 2 1];
-end
+% Yuanjian Carla Li, March 30, 2014
 
 %record the profile for performance enhancement
 profile on %-detail builtin -history
-diary([ordering '_output_log']);
+diary('output_log_11.18');
 diary on;
 
 %%
@@ -39,7 +21,7 @@ numIncMines = 3; %number of incentive mines per firm
 %SUPPLYCURVE_MODE controls which supply curve is used. 0 is for the scrambled Rio
 %Tinto one. 1 is for the real Rio Tinto one. -1 is for the real Rio Tinto one except the 
 %capex is reduced 10x so that shorter time horizon can still yield mine opening.
-% -2 is for the dummy one for testing purpose. -3 is for the Rio Tinto one with more aggregation (testing purpose) 
+% -2 is for the dummy one for testing purpose. 
 SUPPLYCURVE_MODE = 1;
 
 %MODE_MKT_CLEAR_AFTER_ALL_DECIDE controls whether we have all the mines make a decision before the
@@ -74,7 +56,7 @@ MODE_END_PERIOD_VALUE = 0;
 
 %specify the order that the firms will make decision in. 2 in period t
 %indicates that firm 2 will make a decision in t=2
-orderOfFirms = repmat(decision_order,1,ceil((T+1)/numFirms));  %HARDCODE ALERT
+orderOfFirms = repmat([1 2 3],1,ceil((T+1)/numFirms));  %HARDCODE ALERT
 orderOfFirms = orderOfFirms(1:T+1);
 
 %there are 3 incentive mines per player, 3 players,  a variable that
@@ -107,30 +89,21 @@ Faces = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
 el = 1; 
 %demand level and growth
 %D_0 = 1100;   %base demand
-D_0 = 1400;   %base demand
+D_0 = 1300;   %base demand
 D_growth = 0.01;   %demand growth rate
 
 %populate the demand series 
 Demand = ones(1,T)*D_0;
-Demand_yr = ones(1,T_years)*D_0; 
-for t_yr=2:T_years
-    Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1+D_growth);
-end
-
-if(T==T_years)
-    Demand = Demand_yr; 
-else
-    for t=1:T
-        if(mod(t,decisions_in_dt)==1)
-            Demand(t) = Demand_yr(ceil(t/decisions_in_dt));
-        else
-            Demand(t) = Demand(t-1);
-        end
-    end 
-end
+for t=2:T
+    if(or(decisions_in_dt==1, mod(t,decisions_in_dt)==1))
+        Demand(t) = Demand(t-1)*(1+D_growth);
+    else
+        Demand(t) = Demand(t-1);
+    end
+end 
 
 %demand fluctuation range and prob
-D_fluct = 0.97;  %TODO: THIS CANNOT BE ZERO AT THE MOMENT. NEED TO SAFETY CHECK
+D_fluct = 0.9;  %TODO: THIS CANNOT BE ZERO AT THE MOMENT. NEED TO SAFETY CHECK
 D_prob = [0,1,0];
 
 %the change associated with a state variable on whether demand has been permanently changed due to a
@@ -141,106 +114,8 @@ DPERM_change = 0.05; % +5% change in non-shocked demand if DPERM is 1, and 10% i
 %%
 %%Supply curve - assume it doesn't change over time
 % structure is owner, quantity, cost
-SupplyCurve = zeros(95,3,T);
-if(SUPPLYCURVE_MODE==1)
-%inflated highest price Q to never run out of supply
-    SupplyCurve(:,:,1) = [4	16	15
-                        4	9	25
-                        4	15	35
-                        2	74	39
-                        3	46	40
-                        3	2	40
-                        3	50	42
-                        3	9	43
-                        4	14	43
-                        3	3	44
-                        2	40	46
-                        3	102	46
-                        3	24	47
-                        2	42	47
-                        2	24	48
-                        4	36	48
-                        2	25	49
-                        1	289	49
-                        4	48	51
-                        4	36	54
-                        3	5	54
-                        3	4	55
-                        4	47	56
-                        4	37	59
-                        4	71	61
-                        4	21	64
-                        1	12	65
-                        4	29	66
-                        3	2	66
-                        4	88	69
-                        4	28	71
-                        4	26	74
-                        3	21	76
-                        3	6	76
-                        4	80	76
-                        4	16	79
-                        4	16	81
-                        4	30	84
-                        4	33	86
-                        1	5	86
-                        4	16	89
-                        4	22	91
-                        4	17	94
-                        3	9	96
-                        4	19	96
-                        4	14	99
-                        4	19	101
-                        4	16	104
-                        4	25	106
-                        4	11	109
-                        4	11	111
-                        4	9	114
-                        4	17	116
-                        4	12	119
-                        4	10	123
-                        4	5	128
-                        4	14	133
-                        4	8	138
-                        4	6	143
-                        4	21	148
-                        4	4	153
-                        4	2	163
-                        4	2	168
-                        4	2	175
-                        4	1	185
-                        4	3	195
-                        4	3	205
-                        4	3	225
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245
-                        4	4	245];
-elseif(SUPPLYCURVE_MODE==-3)
-    SupplyCurve(1:44,:,1) = [1	289	49
+SupplyCurve = zeros(94,3,T);
+SupplyCurve(1:44,:,1) = [1	289	49
             1	12	65
             1	5	86
             2	74	39
@@ -284,11 +159,9 @@ elseif(SUPPLYCURVE_MODE==-3)
             4	3	205
             4	3	225
             4	10	245];  
-    %inflate highest price Q to never run out of supply
-    highcostQ = repmat([4 2 245], (95-44),1);
-    SupplyCurve(45:95,:,1) = highcostQ;
-end
-%sort the supply to reduce later sorting time
+%inflate highest price Q to never run out of supply
+highcostQ = repmat([4 2 245], 50,1);
+SupplyCurve(45:94,:,1) = highcostQ;
 SupplyCurve(:,:,1) = sortrows(SupplyCurve(:,:,1),3);
 
 % %DUMMY Supply Curve
@@ -772,368 +645,4 @@ end
 %%CALC OPTIMAL POLICY FOR MAXING FIRM NPV, NO GAME THEORY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%
 %parameters of the simulations
-simNum = 1;   %number of simulation
-sim_dr = dr;
-sim_orderOfFirms = orderOfFirms;
-
-%demand fluctuation range and prob
-sim_D_fluct = D_fluct;
-sim_D_prob = D_prob;
-sim_Demand = Demand;
-
-%the change associated with a state variable on whether demand has been permanently changed due to a
-%high demand/low demand event (demand never fully recovers from large
-%swings because of semi-permanent substitution (DPERM)
-sim_DPERM_change = DPERM_change; % +10% change in non-shocked demand if DPERM is 1, and 20% if it's 2. 
-
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%SIMULATION OF THE FIRM NPV BASED POLICIES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Simulate the game with the demand uncertainty. See how the price path
-% unfolds using the optimal policy. Compare against a dummy policy and
-% compare. 
-
-%dummy base policy of not opening no matter what the conditions are
-Xa_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
-Xb_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
-Xc_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
-
-%"smarter" policy to test
-Xa_2 = Xa;
-Xb_2 = Xb;
-Xc_2 = Xc;
-
-
-%output to be recorded
-sim_Prices_1 = zeros(T_years, simNum);
-sim_Q_1 = zeros(T_years, simNum);
-sim_CapUtil_1 = zeros(T_years, simNum);
-sim_Faces_1 = zeros(T_years, simNum); %when it crossed the cliff face of supply curve
-sim_V_1 = zeros(numFirms, simNum);
-sim_openings_1 = zeros(numIncMines, numFirms, simNum);
-sim_diag_1 = cell(T_years,simNum);    %cell array to store the diagnostics from each market clearing
-sim_firm_Q_1 = zeros(numFirms, T_years, simNum);
-
-sim_Prices_2 = zeros(T_years, simNum);
-sim_Q_2 = zeros(T_years, simNum);
-sim_CapUtil_2 = zeros(T_years, simNum);
-sim_Faces_2 = zeros(T_years, simNum);
-sim_V_2 = zeros(numFirms, simNum);
-%record the time period each mine opened (if they did at all)
-sim_openings_2 = zeros(numIncMines, numFirms, simNum);
-sim_diag_2 = cell(T_years,simNum);    %cell array to store the diagnostics from each market clearing
-sim_firm_Q_2 = zeros(numFirms, T_years, simNum);
-
-%name of the diagnostic entries
-sim_diag_names = cell(1,1);
-
-%simulate for policy 1 and policy 2
-[sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1, sim_diag_names] ...
-    = simulation(Xa_1, Xb_1, Xc_1, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
-
-[sim_openings_2, sim_Prices_2, sim_Q_2, sim_firm_Q_2, sim_V_2, sim_Vt_2, sim_CapUtil_2, sim_Faces_2, sim_diag_2, sim_diag_names] ...
-    = simulation(Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%POSITIVE MINE NPV CRITERIA OPTIMAL DECISION CALC AND SIMULATION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%parameters of the simulations
-simNum3 = 1; 
-
-[sim_openings_3, sim_Prices_3, sim_Q_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
-    mine_NPV_DPandSim(simNum3, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
-    T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm);
-
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%SIMULATION: What happens if one or more firms use firm-NPV maximizing
-%%strategy, but against competitors who use the mine NPV maximizing
-%%paradigm? 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%PLOTTING OF THE RESULTS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%Plots for comparison the price, quantity and NPV outcomes under policy 1 and 2
-%FIGURE 1 compare the price
-colormap(lines(10)); 
-fig = figure(1);
-clf('reset');
-set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.4]); 
-time = 1:T_years;
-plot(time, sim_Prices_1, time, sim_Prices_2, time, sim_Prices_3);
-axis([min(time) 30 min(min([sim_Prices_1 sim_Prices_2 sim_Prices_3]))-5, max(max([sim_Prices_1 sim_Prices_2 sim_Prices_3]))+5])
-fprintf('Price path of different policies, order(%s)\n', ordering);
-sim_Prices_1
-sim_Prices_2
-sim_Prices_3
-
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy');
-set(leg1, 'Box', 'off');
-set(leg1, 'Color', 'none');
-
-
-title(['Price Path (' ordering ')']);
-xlabel('Year');
-ylabel('Real price');
-
-saveas(fig, [ordering '_price path.jpg']); 
-
-%FIGURE 2 compare the market quantity over time
-fig = figure(2);
-clf('reset');
-set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.4]); 
-
-plot(time, sim_Q_1, time, sim_Q_2, time, sim_Q_3, time, Demand_yr');
-axis([min(time) 30 min(min([sim_Q_1 sim_Q_2 sim_Q_3 Demand_yr']))-50, max(max([sim_Q_1 sim_Q_2 sim_Q_3 Demand_yr']))+50])
-
-fprintf('Quantity path of different policies: dummy, firm_NPV with game, postive mine NPV\n');
-sim_Q_1
-sim_Q_2
-sim_Q_3
-
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'Underlying demand');
-set(leg1, 'Box', 'off');
-set(leg1, 'Color', 'none');
-
-
-title(['Market Clearing Quantity (' ordering ')']);
-xlabel('Year');
-ylabel('Quantity');
-saveas(fig, [ordering '_production path.jpg']); 
-
-
-%%
-%plot the new mine openings
-
-%get the new mine opening data into shape
-
-sim_open_1 = zeros(T_years, 3, numFirms); 
-sim_open_2 = zeros(T_years, 3, numFirms); 
-sim_open_3 = zeros(T_years, 3, numFirms); 
-
-for(c=1:numFirms)
-    currentIncCurve = TotalIncCurve_byFirm{c};
-    for(r=1:numIncMines)
-        t = sim_openings_1(r,c);
-        if(t~=0)
-            sim_open_1(t,1,c) = currentIncCurve(r,2); %production
-            sim_open_1(t,2,c) = currentIncCurve(r,3); %opex
-            sim_open_1(t,3,c) = currentIncCurve(r,4); %capex
-        end
-        
-        t = sim_openings_2(r,c);
-        if(t~=0)
-            sim_open_2(t,1,c) = currentIncCurve(r,2); %production
-            sim_open_2(t,2,c) = currentIncCurve(r,3); %opex
-            sim_open_2(t,3,c) = currentIncCurve(r,4); %capex
-        end
-        
-        t = sim_openings_3(r,c);
-        if(t~=0)
-            sim_open_3(t,1,c) = currentIncCurve(r,2); %production
-            sim_open_3(t,2,c) = currentIncCurve(r,3); %opex
-            sim_open_3(t,3,c) = currentIncCurve(r,4); %capex
-        end
-    end
-end
-
-
-%plot the new openings
-fig = figure(3);
-% clf('reset');
-set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.8]); 
-colormap(lines(10));
-
-subplot(3,1,1)
-h = bar(time, squeeze(sim_open_1(:,1,:)), 'stacked', 'EdgeColor','none'); 
-set(gca, 'YLim',[0 max(TotalIncentiveCurve(:,2))*2])
-l = cell(1,3); 
-l{1} = 'Firm A'; l{2} = 'Firm B'; l{3} = 'Firm C'; 
-legend(h, l);
-title('No new opening');
-ylabel('Capacity');
-
-subplot(3,1,2)
-bar(time, squeeze(sim_open_2(:,1,:)), 'stacked', 'EdgeColor','none');
-set(gca, 'YLim',[0 max(TotalIncentiveCurve(:,2))*2])
-y = squeeze(sim_open_2(:,2,:)); 
-y_positions = squeeze(sim_open_2(:,1,:));
-for(c=1:numFirms)
-    ypos = sum(y_positions(:,1:c), 2);
-    for(r=1:T_years)
-        if(y(r,c)~=0)
-            text(time(r),ypos(r),['\fontsize{9}\color{white}' num2str(y(r,c),'%0.0f')],...
-            'HorizontalAlignment','center',...
-            'VerticalAlignment','top')
-        end
-    end
-end
-title('best firm-NPV policy');
-ylabel('Capacity');
-
-subplot(3,1,3)
-bar(time, squeeze(sim_open_3(:,1,:)), 'stacked', 'EdgeColor','none'); 
-set(gca, 'YLim',[0 max(TotalIncentiveCurve(:,2))*2])
-y = squeeze(sim_open_3(:,2,:)); 
-y_positions = squeeze(sim_open_3(:,1,:));
-for(c=1:numFirms)
-    ypos = sum(y_positions(:,1:c), 2);
-    ypos
-    for(r=1:T_years)
-        if(y(r,c)~=0)
-            text(time(r),ypos(r),['\fontsize{9}\color{white}' num2str(y(r,c),'%0.0f')],...
-            'HorizontalAlignment','center',...
-            'VerticalAlignment','top')
-        end
-    end
-end
-title('positive-mine-NPV policy');
-ylabel('Capacity');
-xlabel('Year');
-
-
-annotation('textbox', [0 0.9 1 0.1], ...
-'String', ['New Mine Openings, with opex as label (' ordering ')'], ...
-'EdgeColor', 'none', ...
-'HorizontalAlignment', 'center')
-
-saveas(fig, [ordering '_new mines openings.jpg']); 
-
-%display summary of new openings over time
-display('policy 1 openings (row = mine #, column = firm #)');
-sim_openings_1
-display('policy 2 openings (row = mine #, column = firm #)');
-sim_openings_2
-display('policy 3 openings (row = mine #, column = firm #)');
-sim_openings_3
-
-
-%compare the value (NPV) of the firms in the two scenarios
-fig = figure(4);
-clf('reset');
-colormap(lines(10));
-h = bar([sim_V_1 sim_V_2 sim_V_3], 'group', 'EdgeColor','none');
-set(gca, 'YLim',[0 max(max([sim_V_1 sim_V_2 sim_V_3]))+10^4])
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'Underlying demand');
-set(leg1, 'Box', 'off');
-set(leg1, 'Color', 'none');
-set(gca, 'XTick', 1:numFirms, 'XTickLabel', {'Firm A', 'Firm B', 'Firm C'}); 
-title(['NPV Comparison (' ordering ')']);
-ylabel('NPV');
-saveas(fig, [ordering '_NPV comparison.jpg']); 
-
-%display NPV of the different players under diff scenarios
-fprintf('Total NPV of the three players under base policy is %d \n', sum(sim_V_1));
-sim_V_1
-fprintf('Total NPV of the three players under the firm-optimal policy is %d \n', sum(sim_V_2));
-sim_V_2
-fprintf('Total NPV of the three players under mine-optimal policy is %d \n', sum(sim_V_3));
-sim_V_3
-
-
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%DEMONSTRATION THAT THE GAME THEORY OPTIMAL POLICY IS INDEED NASH
-%%EQUILIBRIUM
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%1. when the other firms adopt other policies, they won't have better
-%payoff
-%simulate settings
-numOtherPolicies = 20;   %number of simulation
-sim_dr = dr;
-sim_orderOfFirms = orderOfFirms;
-
-%demand fluctuation range and prob
-sim_D_fluct = D_fluct;
-sim_D_prob = D_prob;
-sim_Demand = Demand;
-
-%the change associated with a state variable on whether demand has been permanently changed due to a
-%high demand/low demand event (demand never fully recovers from large
-%swings because of semi-permanent substitution (DPERM)
-sim_DPERM_change = DPERM_change; % +10% change in non-shocked demand if DPERM is 1, and 20% if it's 2. 
-
-%simulate a number of random policies for each firm in turn to see if they
-%can get a better value by diverging from the optimal policy
-firmNames = ['A' 'B' 'C' 'D'];
-for varywho = 1:numFirms
-    [sim_openings_4, sim_Prices_4, sim_Q_4, sim_firm_Q_4, sim_V_4, sim_Vt_4, sim_CapUtil_4, sim_Faces_4, sim_diag_4] ...
-        = sim_variations(varywho, Xa_2, Xb_2, Xc_2, numOtherPolicies, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-        IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
-    sim_openings_4;
-
-    %Graph the different NPV 
-    %overall NPV bar graph
-    fig = figure(4+varywho);
-    clf('reset');
-    %graph for A
-    subplot(3,1,1);
-    width1 = 0.5;
-    bar(1, sim_V_2(1), width1, 'FaceColor',[0.2,0.2,0.5],....
-                         'EdgeColor','none');
-    hold on
-    width2 = width1/2;
-    bar(2:numOtherPolicies+1, sim_V_4(1,:), width2,'FaceColor',[0,0.7,0.7],...
-                         'EdgeColor',[0,0.7,0.7]);
-    %legend('Optimal Policy for A', 'Other Policies for A');
-    title('NPV Comparison for A');
-    ylabel('NPV');
-    hold off
-
-    %graph for B
-    subplot(3,1,2);
-    width1 = 0.5;
-    bar(1, sim_V_2(2), width1, 'FaceColor',[0.2,0.2,0.5],....
-                         'EdgeColor','none');
-    hold on
-    width2 = width1/2;
-    bar(2:numOtherPolicies+1, sim_V_4(2,:), width2,'FaceColor',[0,0.7,0.7],...
-                         'EdgeColor',[0,0.7,0.7]);
-    %legend('Optimal Policy for A', 'Other Policies for A');
-    title('NPV Comparison for B');
-    ylabel('NPV');
-    hold off
-
-    %graph for C
-    subplot(3,1,3);
-    width1 = 0.5;
-    bar(1, sim_V_2(3), width1, 'FaceColor',[0.2,0.2,0.5],....
-                         'EdgeColor','none');
-    hold on
-    width2 = width1/2;
-    bar(2:numOtherPolicies+1, sim_V_4(3,:), width2,'FaceColor',[0,0.7,0.7],...
-                         'EdgeColor',[0,0.7,0.7]);
-    %legend('Optimal Policy for A', 'Other Policies for A');
-    title('NPV Comparison for C');
-    ylabel('NPV');
-    hold off
-
-    annotation('textbox', [0 0.9 1 0.1], ...
-    'String', sprintf( 'NPV Variations %s (%s)', firmNames(varywho), ordering), ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center')
-    
-    saveas(fig,  sprintf( '%s_NPV_variations %s.jpg', ordering, firmNames(varywho)) ); 
-end
-
-%%
-%Report the recorded performance diagnostic profile
-profile report
-diary off

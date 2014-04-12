@@ -42,6 +42,10 @@ numIncMines = 3; %number of incentive mines per firm
 % -2 is for the dummy one for testing purpose. -3 is for the Rio Tinto one with more aggregation (testing purpose) 
 SUPPLYCURVE_MODE = 1;
 
+%ROWINCCURVE_MODE: 1 is for ROW Incentive curve being mines that will
+%always operate. 2 is for ROW curve with mines that have specified opex
+ROWINCCURVE_MODE=1; 
+
 %MODE_MKT_CLEAR_AFTER_ALL_DECIDE controls whether we have all the mines make a decision before the
 %market clears (1), or whether the market clears after each one (0). It 
 %affects the interpretation of dt as well. T is 1/3 of a year in the first
@@ -78,28 +82,36 @@ orderOfFirms = repmat(decision_order,1,ceil((T+1)/numFirms));  %HARDCODE ALERT
 orderOfFirms = orderOfFirms(1:T+1);
 
 %there are 3 incentive mines per player, 3 players,  a variable that
-%indicates which player is making decision in a period, and 5 levels of
-%permanent demand change
-%For the value vector for each state-action pair, the numIncMines+1 dimension 
-% refers to whcih action is taken. Since the action could be to open none 
-% of the mines or any of the incentive mines, the length of the dimension 
-% is numIncMines+1
-Va_actions = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,numIncMines+1, T+1); 
-Vb_actions = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,numIncMines+1, T+1);
-Vc_actions = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,numIncMines+1, T+1);
+%indicates which player is making decision in a period,  5 levels of
+%permanent demand change, and 5 levels of ROW supply expansions
 % Va etc store the optimal value
-Va = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, T+1); 
-Vb = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, T+1);
-Vc = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, T+1);
+Va = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, 4,T+1); 
+Vb = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, 4,T+1);
+Vc = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, 4,T+1);
 %optimal actions built as a cell array, because each cell could have more
 %than 1 action that is optimal
-Xa = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1); 
-Xb = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
-Xc = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
-Prices = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
-Quantities = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
-CapUtils = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
-Faces = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T);
+Xa = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1); 
+Xb = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1);
+Xc = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1);
+Prices = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+Quantities = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+CapUtils = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+Faces = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+
+%MONOPOLY NPV of profit -- where the results are stored
+Va = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, 4,T+1); 
+Vb = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, 4,T+1);
+Vc = zeros(2,2,2,2,2,2,2,2,2,numFirms,5, 4,T+1);
+%optimal actions built as a cell array, because each cell could have more
+%than 1 action that is optimal
+Xa = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1); 
+Xb = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1);
+Xc = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1);
+Prices = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+Quantities = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+CapUtils = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+Faces = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
+
 
 %%
 %%Demand settings
@@ -138,13 +150,136 @@ D_prob = [0,1,0];
 %swings because of semi-permanent substitution (DPERM)
 DPERM_change = 0.05; % +5% change in non-shocked demand if DPERM is 1, and 10% if it's 2. 
 
+
+%%
+%Settings for new mines belonging to the big 3 players, ie incentive curves. The columns are ownerID, capacity, opex, and
+%capex respectively
+if(SUPPLYCURVE_MODE==0)
+    IncentiveCurveA = [1	70	43	5600
+                        1	50	47	10247
+                        1	50	49	10417];
+
+    IncentiveCurveB = [2	50	52	9629
+                        2	110	57	28211
+                        2	55	49	10754];
+
+    IncentiveCurveC = [3	90	54	16700
+                        3	45	54	5445
+                        3	45	67	11354];
+    
+elseif(SUPPLYCURVE_MODE==1)
+    IncentiveCurveA = [1	70	43	5600
+                        1	50	47	10247
+                        1	50	49	10417];
+
+    IncentiveCurveB = [2	50	52	9629
+                        2	110	57	28211
+                        2	55	49	10754];
+
+    IncentiveCurveC = [3	90	54	16700
+                        3	45	54	5445
+                        3	45	67	11354];
+elseif(SUPPLYCURVE_MODE==-1)
+
+    % Reduced capex incentive curve (so that shorter periods would still have
+    % mine openings)
+    IncentiveCurveA = [1	70	43	560
+                        1	50	47	1025
+                        1	50	49	1042];
+
+    IncentiveCurveB = [2	50	52	963
+                        2	110	57	2821
+                        2	55	49	1075];
+
+    IncentiveCurveC = [3	90	54	1670
+                        3	45	54	544
+                        3	45	67	1135];
+elseif(SUPPLYCURVE_MODE==-2)
+    % %Dummy Incentive Curves
+    IncentiveCurveA = [1	5	9	10
+                        1	5	10	10
+                        1	5	11	10];
+
+    IncentiveCurveB = [2	5	9	10
+                        2	5	10	10
+                        2	5	11	10];
+
+    IncentiveCurveC = [3	5	9	10
+                        3	5	10	10
+                        3	5	11	10];
+    % %END OF DUMMY INCENTIVE CURVE
+end
+
+%Put all the incentive curves together into master incentive curve                
+TotalIncentiveCurve = [IncentiveCurveA(1:numIncMines, :); 
+                        IncentiveCurveB(1:numIncMines, :);
+                        IncentiveCurveC(1:numIncMines, :)];
+TotalIncCurve_byFirm = cell(3,1);
+TotalIncCurve_byFirm{1} = IncentiveCurveA(1:numIncMines, :);
+TotalIncCurve_byFirm{2} = IncentiveCurveB(1:numIncMines, :);
+TotalIncCurve_byFirm{3} = IncentiveCurveC(1:numIncMines, :);
+
+%%
+%%Construct the rest of the world incentive curve, which will be start
+%%production at certain price thresholds defined in the findPrice_new function. 
+%%TODO: FILL OUT THE Rest of the World INCENTIVE CURVE WITH A REASONABLE
+%%NUMBER OF MINES, EACH OF REASONABLE SIZE (compared to the 
+ROWIncCurve =  cell(3,1); 
+
+if(ROWINCCURVE_MODE==1)
+    ROWIncCurve{1} =   [4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1];
+    ROWIncCurve{2} =   [4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1];
+    ROWIncCurve{3} =   [4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1
+                        4	20	1];    
+    
+else
+    ROWIncCurve{1} =   [4	20	60.5
+                        4	20	61
+                        4	20	61.5
+                        4	20	62
+                        4	20	62.5
+                        4	20	63];
+    ROWIncCurve{2} =   [4	20	72.5
+                        4	20	73
+                        4	20	73.5
+                        4	20	74
+                        4	20	74.5
+                        4	20	75];
+    ROWIncCurve{3} =   [4	20	90.5
+                        4	20	91
+                        4	20	91.5
+                        4	20	92
+                        4	20	92.5
+                        4	20	93];
+end 
+
 %%
 %%Supply curve - assume it doesn't change over time
 % structure is owner, quantity, cost
-SupplyCurve = zeros(95,3,T);
+% the supply curve has places held for the incentive elements, so that it
+% doesn't need to be resized and slow down the code in findprice_new
+incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1) + size(ROWIncCurve{3},1); 
+SupplyCurve = zeros(95+incSupLength,3,T);
 if(SUPPLYCURVE_MODE==1)
-%inflated highest price Q to never run out of supply
-    SupplyCurve(:,:,1) = [4	16	15
+    %fill the owner of the placeholders for the potential incentive mines with 
+    % 4 to prevent index 0 in a later part of the program for a mine not opened
+    SupplyCurve(1:incSupLength,1,1) = 4; 
+    %inflated highest price Q to never run out of supply
+    SupplyCurve(incSupLength+1:end,:,1) = [4	16	15
                         4	9	25
                         4	15	35
                         2	74	39
@@ -288,7 +423,7 @@ elseif(SUPPLYCURVE_MODE==-3)
     highcostQ = repmat([4 2 245], (95-44),1);
     SupplyCurve(45:95,:,1) = highcostQ;
 end
-%sort the supply to reduce later sorting time
+%sort the supply by opex to reduce later sorting time
 SupplyCurve(:,:,1) = sortrows(SupplyCurve(:,:,1),3);
 
 % %DUMMY Supply Curve
@@ -316,75 +451,8 @@ for t=2:T
     SupplyCurve(:,:,t) = SupplyCurve(:,:,1);
 end
 
-%%
-%Settings for new mines, ie incentive curves. The columns are ownerID, capacity, opex, and
-%capex respectively
-if(SUPPLYCURVE_MODE==0)
-    IncentiveCurveA = [1	70	43	5600
-                        1	50	47	10247
-                        1	50	49	10417];
-
-    IncentiveCurveB = [2	50	52	9629
-                        2	110	57	28211
-                        2	55	49	10754];
-
-    IncentiveCurveC = [3	90	54	16700
-                        3	45	54	5445
-                        3	45	67	11354];
-    
-elseif(SUPPLYCURVE_MODE==1)
-    IncentiveCurveA = [1	70	43	5600
-                        1	50	47	10247
-                        1	50	49	10417];
-
-    IncentiveCurveB = [2	50	52	9629
-                        2	110	57	28211
-                        2	55	49	10754];
-
-    IncentiveCurveC = [3	90	54	16700
-                        3	45	54	5445
-                        3	45	67	11354];
-elseif(SUPPLYCURVE_MODE==-1)
-
-    % Reduced capex incentive curve (so that shorter periods would still have
-    % mine openings)
-    IncentiveCurveA = [1	70	43	560
-                        1	50	47	1025
-                        1	50	49	1042];
-
-    IncentiveCurveB = [2	50	52	963
-                        2	110	57	2821
-                        2	55	49	1075];
-
-    IncentiveCurveC = [3	90	54	1670
-                        3	45	54	544
-                        3	45	67	1135];
-elseif(SUPPLYCURVE_MODE==-2)
-% %Dummy Incentive Curves
-IncentiveCurveA = [1	5	9	10
-                    1	5	10	10
-                    1	5	11	10];
-
-IncentiveCurveB = [2	5	9	10
-                    2	5	10	10
-                    2	5	11	10];
-
-IncentiveCurveC = [3	5	9	10
-                    3	5	10	10
-                    3	5	11	10];
-% %END OF DUMMY INCENTIVE CURVE
-end
-
-%Put all the incentive curves together into master incentive curve                
-TotalIncentiveCurve = [IncentiveCurveA(1:numIncMines, :); 
-                        IncentiveCurveB(1:numIncMines, :);
-                        IncentiveCurveC(1:numIncMines, :)];
-TotalIncCurve_byFirm = cell(3,1);
-TotalIncCurve_byFirm{1} = IncentiveCurveA(1:numIncMines, :);
-TotalIncCurve_byFirm{2} = IncentiveCurveB(1:numIncMines, :);
-TotalIncCurve_byFirm{3} = IncentiveCurveC(1:numIncMines, :);
-
-                    
+                
+%%                    
 %calculate the coefficient a for the demand function
 %P=X^(1/elasticity)*a*Q^(-1/elasticity)*(1+g)^(1/elasticity)
 %a will remain the same throughout the time periods
@@ -406,6 +474,7 @@ fprintf('****BASIC SETUP***\n');
 MODE_MKT_CLEAR_AFTER_ALL_DECIDE
 MODE_END_PERIOD_VALUE
 SUPPLYCURVE_MODE
+ROWINCCURVE_MODE
 fprintf('The order of firms making decisions is:  ');
 disp(orderOfFirms(1:numFirms));
 disp(T);
@@ -429,6 +498,9 @@ fprintf('Supply curve is constant over time\n');
 
 fprintf('****INCENTIVE CURVE***\n');
 TotalIncentiveCurve
+ROWIncCurve{1}
+ROWIncCurve{2}
+ROWIncCurve{3}
 
 
 %%
@@ -439,12 +511,12 @@ TotalIncentiveCurve
 
 %value for terminal period
 %MAYBETODO: terminal state do not need to be everything shut down
-Va(:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
-Vb(:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
-Vc(:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
-Xa(:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
-Xb(:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
-Xc(:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
+Va(:,:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
+Vb(:,:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
+Vc(:,:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
+Xa(:,:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
+Xb(:,:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
+Xc(:,:,:,:,:,:,:,:,:,:,:,:,T+1) = 0;
 
 %Solve for the best
 for t=T:-1:1
@@ -461,6 +533,7 @@ for t=T:-1:1
     for C3=1:2
         MinesOpened = [A1, A2, A3, B1, B2, B3, C1, C2, C3];
     for DPERM = 1:5
+    for SUPSHIFT = 1:(size(ROWIncCurve, 1)+1)
     %identify of the player who is currently making an expansion decision
     for currentFirm=1:numFirms
         %right now, have a deterministic sequence of firms who are deciding
@@ -492,7 +565,7 @@ for t=T:-1:1
                 %skip this loop if a is not feasible
                 %given the states
                 if(a==1 && A1==2)
-                    continue;  %DEBUG: SHOULD THIS BE CONTINUE?
+                    continue;  
                 elseif(a==2 && A2==2)
                     continue;
                 elseif(a==3 && A3==2)
@@ -505,13 +578,13 @@ for t=T:-1:1
                 
                 if(or(MODE_MKT_CLEAR_AFTER_ALL_DECIDE == 0, mod(t,decisions_in_dt)==0)) 
                     %market clearing and reward calculation 
-                    [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+                    [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, SUPSHIFT, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
                     %return   %DEBUG this break is just to run the findPrice function once
                     %display('As turn - prices');
 
                     %record the total number of times the intersection hit the
                     %face of a supply step cliff for a given set of state vars
-                    Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = sum(faces) + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
+                    Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = sum(faces) + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t);
 
                     %Calculate this period expected reward for A
                     rewardA = sum(rewards(1,:).*D_prob);
@@ -530,9 +603,10 @@ for t=T:-1:1
                     v_c = zeros(1,length(D_prob));
                     for d = 1:length(D_prob)
                         [nextDPerm] = demandPermChange(DPERM, market_p(d));
-                        v_a(d) = D_prob(d)*Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                        v_b(d) = D_prob(d)*Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                        v_c(d) = D_prob(d)*Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
+                        [nextSUPSHIFT] = SupShiftChange(SUPSHIFT, market_p(d));
+                        v_a(d) = D_prob(d)*Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                        v_b(d) = D_prob(d)*Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                        v_c(d) = D_prob(d)*Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
                     end
                 
                     totalVa = rewardA + (1-dr)*sum(v_a);
@@ -541,8 +615,10 @@ for t=T:-1:1
 
                 else %for intermediate periods where market doesn't clear
                     %figure out where you would go next
-                    nextS = [A1+(a==1),A2+(a==2),A3+(a==3),B1+(b==1),B2+(b==2),B3+(b==3),C1+(c==1),C2+(c==2),C3+(c==3)]; %next state of openings
+                    %nextS = [A1+(a==1),A2+(a==2),A3+(a==3),B1+(b==1),B2+(b==2),B3+(b==3),C1+(c==1),C2+(c==2),C3+(c==3)]; %next state of openings
+                    nextS = MinesOpened_updated; 
                     nextDPerm = DPERM;
+                    nextSUPSHIFT = SUPSHIFT; 
                     
                     %adjust for any capex incurred by the decision to open
                     capex = 0;
@@ -550,9 +626,9 @@ for t=T:-1:1
                         capex = IncentiveCurveA(a,4);
                     end
               
-                    totalVa = Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1)-capex;
-                    totalVb = Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                    totalVc = Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
+                    totalVa = Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1)-capex;
+                    totalVb = Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                    totalVc = Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
                 end 
 
                     %If it is the best V so far, replace the current best V
@@ -585,10 +661,10 @@ for t=T:-1:1
                 elseif(b==3 && B3==2)
                     continue;
                 end
-                if(or(MODE_MKT_CLEAR_AFTER_ALL_DECIDE == 0, mod(t,decisions_in_dt)==0)) 
-                    %calculate the relevant outcome for A given this action
-                    MinesOpened_updated = MinesOpened + [0,0,0,(b==1),(b==2),(b==3),0,0,0];
-                    [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+                MinesOpened_updated = MinesOpened + [0,0,0,(b==1),(b==2),(b==3),0,0,0];
+                if(or(MODE_MKT_CLEAR_AFTER_ALL_DECIDE == 0, mod(t,decisions_in_dt)==0))
+                    %calculate the relevant outcome for A given this action 
+                    [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, SUPSHIFT, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
                     %display('Bs turn - prices');
                     %display(market_p);
                     %Calculate this period expected reward for A
@@ -607,9 +683,10 @@ for t=T:-1:1
                     v_c = zeros(1,length(D_prob));
                     for d = 1:length(D_prob)
                         [nextDPerm] = demandPermChange(DPERM, market_p(d));
-                        v_a(d) = D_prob(d)*Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                        v_b(d) = D_prob(d)*Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                        v_c(d) = D_prob(d)*Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
+                        [nextSUPSHIFT] = SupShiftChange(SUPSHIFT, market_p(d));
+                        v_a(d) = D_prob(d)*Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                        v_b(d) = D_prob(d)*Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                        v_c(d) = D_prob(d)*Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
                     end
 
                     totalVa = rewardA + (1-dr)*sum(v_a);
@@ -618,20 +695,22 @@ for t=T:-1:1
 
                     %record the total number of times the intersection hit the
                     %face of a supply step cliff for a given set of state vars
-                    Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = sum(faces) + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t);
+                    Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = sum(faces) + Faces(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t);
                 else %for intermediate periods where market doesn't clear
                     %figure out where you would go next
-                    nextS = [A1+(a==1),A2+(a==2),A3+(a==3),B1+(b==1),B2+(b==2),B3+(b==3),C1+(c==1),C2+(c==2),C3+(c==3)]; %next state of openings
+                    %nextS = [A1+(a==1),A2+(a==2),A3+(a==3),B1+(b==1),B2+(b==2),B3+(b==3),C1+(c==1),C2+(c==2),C3+(c==3)]; %next state of openings
+                    nextS = MinesOpened_updated; 
                     nextDPerm = DPERM;
-
+                    nextSUPSHIFT = SUPSHIFT;
+                    
                     %adjust for any capex incurred by the decision to open
                     capex = 0;
                     if(b~=0)
                         capex = IncentiveCurveB(b,4);
                     end
-                    totalVa = Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                    totalVb = Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1)-capex;
-                    totalVc = Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
+                    totalVa = Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                    totalVb = Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1)-capex;
+                    totalVc = Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
                 end
                 
                 %If it is the best V so far, replace the current best V
@@ -665,10 +744,10 @@ for t=T:-1:1
                 elseif(c==3 && C3==2)
                     continue;
                 end
+                MinesOpened_updated = MinesOpened + [0,0,0,0,0,0,(c==1),(c==2),(c==3)];
                 if(or(MODE_MKT_CLEAR_AFTER_ALL_DECIDE == 0, mod(t,decisions_in_dt)==0)) 
                     %calculate the relevant outcome for A given this action
-                    MinesOpened_updated = MinesOpened + [0,0,0,0,0,0,(c==1),(c==2),(c==3)];
-                    [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve);
+                    [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, SUPSHIFT, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
                     %display('Cs turn - prices');
                     %display(market_p);
                     %Calculate this period expected reward for A
@@ -705,17 +784,19 @@ for t=T:-1:1
 
                 else %for intermediate periods where market doesn't clear
                     %figure out where you would go next
-                    nextS = [A1+(a==1),A2+(a==2),A3+(a==3),B1+(b==1),B2+(b==2),B3+(b==3),C1+(c==1),C2+(c==2),C3+(c==3)]; %next state of openings
+                    %nextS = [A1+(a==1),A2+(a==2),A3+(a==3),B1+(b==1),B2+(b==2),B3+(b==3),C1+(c==1),C2+(c==2),C3+(c==3)]; %next state of openings
+                    nextS = MinesOpened_updated; 
                     nextDPerm = DPERM;
+                    nextSUPSHIFT = SUPSHIFT;
 
                     %adjust for any capex incurred by the decision to open
                     capex = 0;
                     if(c~=0)
                         capex = IncentiveCurveC(c,4);
                     end
-                    totalVa = Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                    totalVb = Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1);
-                    totalVc = Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,t+1)-capex;
+                    totalVa = Va(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                    totalVb = Vb(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1);
+                    totalVc = Vc(nextS(1),nextS(2),nextS(3),nextS(4),nextS(5),nextS(6),nextS(7),nextS(8),nextS(9),orderOfFirms(t+1),nextDPerm,nextSUPSHIFT,t+1)-capex;
                 end
                 
                 %If it is the best V so far, replace the current best V
@@ -739,17 +820,17 @@ for t=T:-1:1
         end
         
         %Store the best actions and values etc
-        Va(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestVa;
-        Vb(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestVb;
-        Vc(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestVc;
-        Xa(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestXa;
-        Xb(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestXb;
-        Xc(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestXc;
+        Va(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestVa;
+        Vb(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestVb;
+        Vc(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestVc;
+        Xa(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestXa;
+        Xb(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestXb;
+        Xc(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestXc;
         
         if(or(MODE_MKT_CLEAR_AFTER_ALL_DECIDE == 0, mod(t,decisions_in_dt)==0)) 
-            Prices(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestP;
-            Quantities(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestQ;
-            CapUtils(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,t) = bestCapUtil;
+            Prices(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestP;
+            Quantities(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestQ;
+            CapUtils(A1,A2,A3,B1,B2,B3,C1,C2,C3,currentFirm,DPERM,SUPSHIFT,t) = bestCapUtil;
 %         fprintf('period %d price is %.2f, q is %d, demand is %d\n',t, bestP,bestQ,Demand(t));
         end
     end        
@@ -763,7 +844,7 @@ for t=T:-1:1
     end
     end
     end
-    
+    end
     
 end
 
@@ -799,9 +880,9 @@ sim_DPERM_change = DPERM_change; % +10% change in non-shocked demand if DPERM is
 % compare. 
 
 %dummy base policy of not opening no matter what the conditions are
-Xa_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
-Xb_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
-Xc_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,T+1);
+Xa_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1);
+Xb_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1);
+Xc_1 = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T+1);
 
 %"smarter" policy to test
 Xa_2 = Xa;
@@ -835,11 +916,11 @@ sim_diag_names = cell(1,1);
 %simulate for policy 1 and policy 2
 [sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1, sim_diag_names] ...
     = simulation(Xa_1, Xb_1, Xc_1, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
+    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve);
 
 [sim_openings_2, sim_Prices_2, sim_Q_2, sim_firm_Q_2, sim_V_2, sim_Vt_2, sim_CapUtil_2, sim_Faces_2, sim_diag_2, sim_diag_names] ...
     = simulation(Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
+    IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve);
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -851,7 +932,7 @@ simNum3 = 1;
 
 [sim_openings_3, sim_Prices_3, sim_Q_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
     mine_NPV_DPandSim(simNum3, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
-    T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm);
+    T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm, ROWIncCurve);
 
 
 %%
@@ -1076,7 +1157,7 @@ firmNames = ['A' 'B' 'C' 'D'];
 for varywho = 1:numFirms
     [sim_openings_4, sim_Prices_4, sim_Q_4, sim_firm_Q_4, sim_V_4, sim_Vt_4, sim_CapUtil_4, sim_Faces_4, sim_diag_4] ...
         = sim_variations(varywho, Xa_2, Xb_2, Xc_2, numOtherPolicies, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
-        IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve);
+        IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve);
     sim_openings_4;
 
     %Graph the different NPV 

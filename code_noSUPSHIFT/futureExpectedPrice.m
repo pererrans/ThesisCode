@@ -5,6 +5,7 @@ function [exp_price_path all_price_paths all_util_paths counter] = futureExpecte
 %fluctuations
 %return the expected price path from the current time period t_yr till T_years
 
+
 %calculate the current and total number of years
 t_yr = ceil(t/decisions_in_dt);
 T_years = ceil(T/decisions_in_dt);

@@ -1,0 +1,1600 @@
+{Index exceeds matrix dimensions.
+
+Error in <a href="matlab:helpUtils.errorDocCallback('market_DP_new_withSupplyShifts', 'C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m', 267)" style="font-weight:bold">market_DP_new_withSupplyShifts</a> (<a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m',267,0)">line 267</a>)
+incSupLength = size(TotalIncentiveCurve,1) +
+size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1) +
+size(ROWIncCurve{3},1) + size(ROWIncCurve{4},1);
+} 
+size(TotalIncentiveCurve,1)
+
+ans =
+
+     9
+
+size(ROWIncCurve{1})
+
+ans =
+
+     6     3
+
+size(ROWIncCurve{1}, 1)
+
+ans =
+
+     6
+
+incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1) + size(ROWIncCurve{3},1) + size(ROWIncCurve{4},1); 
+{Index exceeds matrix dimensions.
+} 
+SupplyCurve = zeros(95+incSupLength,3,T);
+{Undefined function or variable 'incSupLength'.
+} 
+incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1) + size(ROWIncCurve{3},1) + size(ROWIncCurve{4},1);
+{Index exceeds matrix dimensions.
+} 
+incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1) + size(ROWIncCurve{3},1) + size(ROWIncCurve{4},1);
+{Index exceeds matrix dimensions.
+} 
+incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1)
+
+incSupLength =
+
+    15
+
+incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1)
+
+incSupLength =
+
+    21
+
+market_DP_new_withSupplyShifts
+**************PARAMETERS USED********************
+****BASIC SETUP***
+
+MODE_MKT_CLEAR_AFTER_ALL_DECIDE =
+
+     1
+
+
+MODE_END_PERIOD_VALUE =
+
+     0
+
+
+SUPPLYCURVE_MODE =
+
+     1
+
+The order of firms making decisions is:       3     2     1
+
+    81
+
+     3
+
+Number of years in simulation: 27
+****DEMAND SETUP***
+
+el =
+
+     1
+
+
+D_0 =
+
+        1400
+
+
+D_growth =
+
+    0.0100
+
+
+Demand =
+
+   1.0e+03 *
+
+  Columns 1 through 5
+
+    1.4000    1.4000    1.4000    1.4140    1.4140
+
+  Columns 6 through 10
+
+    1.4140    1.4281    1.4281    1.4281    1.4424
+
+  Columns 11 through 15
+
+    1.4424    1.4424    1.4568    1.4568    1.4568
+
+  Columns 16 through 20
+
+    1.4714    1.4714    1.4714    1.4861    1.4861
+
+  Columns 21 through 25
+
+    1.4861    1.5010    1.5010    1.5010    1.5160
+
+  Columns 26 through 30
+
+    1.5160    1.5160    1.5312    1.5312    1.5312
+
+  Columns 31 through 35
+
+    1.5465    1.5465    1.5465    1.5619    1.5619
+
+  Columns 36 through 40
+
+    1.5619    1.5776    1.5776    1.5776    1.5933
+
+  Columns 41 through 45
+
+    1.5933    1.5933    1.6093    1.6093    1.6093
+
+  Columns 46 through 50
+
+    1.6254    1.6254    1.6254    1.6416    1.6416
+
+  Columns 51 through 55
+
+    1.6416    1.6580    1.6580    1.6580    1.6746
+
+  Columns 56 through 60
+
+    1.6746    1.6746    1.6914    1.6914    1.6914
+
+  Columns 61 through 65
+
+    1.7083    1.7083    1.7083    1.7253    1.7253
+
+  Columns 66 through 70
+
+    1.7253    1.7426    1.7426    1.7426    1.7600
+
+  Columns 71 through 75
+
+    1.7600    1.7600    1.7776    1.7776    1.7776
+
+  Columns 76 through 80
+
+    1.7954    1.7954    1.7954    1.8134    1.8134
+
+  Column 81
+
+    1.8134
+
+
+D_fluct =
+
+    0.9700
+
+
+D_prob =
+
+     0     1     0
+
+
+DPERM_change =
+
+    0.0500
+
+Where base demand and supply should meet: 1400
+
+rich_a =
+
+      113400
+
+****SUPPLY SETUP***
+
+ans =
+
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4    16    15
+     4     9    25
+     4    15    35
+     2    74    39
+     3    46    40
+     3     2    40
+     3    50    42
+     3     9    43
+     4    14    43
+     3     3    44
+     2    40    46
+     3   102    46
+     3    24    47
+     2    42    47
+     2    24    48
+     4    36    48
+     2    25    49
+     1   289    49
+     4    48    51
+     4    36    54
+     3     5    54
+     3     4    55
+     4    47    56
+     4    37    59
+     4    71    61
+     4    21    64
+     1    12    65
+     4    29    66
+     3     2    66
+     4    88    69
+     4    28    71
+     4    26    74
+     3    21    76
+     3     6    76
+     4    80    76
+     4    16    79
+     4    16    81
+     4    30    84
+     4    33    86
+     1     5    86
+     4    16    89
+     4    22    91
+     4    17    94
+     3     9    96
+     4    19    96
+     4    14    99
+     4    19   101
+     4    16   104
+     4    25   106
+     4    11   109
+     4    11   111
+     4     9   114
+     4    17   116
+     4    12   119
+     4    10   123
+     4     5   128
+     4    14   133
+     4     8   138
+     4     6   143
+     4    21   148
+     4     4   153
+     4     2   163
+     4     2   168
+     4     2   175
+     4     1   185
+     4     3   195
+     4     3   205
+     4     3   225
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+
+Supply curve is constant over time
+****INCENTIVE CURVE***
+
+TotalIncentiveCurve =
+
+           1          70          43        5600
+           1          50          47       10247
+           1          50          49       10417
+           2          50          52        9629
+           2         110          57       28211
+           2          55          49       10754
+           3          90          54       16700
+           3          45          54        5445
+           3          45          67       11354
+
+{In an assignment  A(I) = B, the number of elements
+in B and I must be the same.
+
+Error in <a href="matlab:helpUtils.errorDocCallback('findPrice_new', 'C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\findPrice_new.m', 63)" style="font-weight:bold">findPrice_new</a> (<a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\findPrice_new.m',63,0)">line 63</a>)
+    SupplyCurve_t(start:start+size(ROWIncCurve{1},1))
+    = ROWIncCurve{1};
+
+Error in <a href="matlab:helpUtils.errorDocCallback('market_DP_new_withSupplyShifts', 'C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m', 569)" style="font-weight:bold">market_DP_new_withSupplyShifts</a> (<a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m',569,0)">line 569</a>)
+                    [market_p, market_q, cap_util,
+                    rewards, faces, firms_q, diag]
+                    = findPrice_new(T, numFirms,
+                    t, MinesOpened_updated,
+                    SUPSHIFT, DPERM, DPERM_change,
+                    el, D_prob, D_fluct,
+                    Demand(t), D} 
+market_DP_new_withSupplyShifts
+**************PARAMETERS USED********************
+****BASIC SETUP***
+
+MODE_MKT_CLEAR_AFTER_ALL_DECIDE =
+
+     1
+
+
+MODE_END_PERIOD_VALUE =
+
+     0
+
+
+SUPPLYCURVE_MODE =
+
+     1
+
+The order of firms making decisions is:       3     2     1
+
+    81
+
+     3
+
+Number of years in simulation: 27
+****DEMAND SETUP***
+
+el =
+
+     1
+
+
+D_0 =
+
+        1400
+
+
+D_growth =
+
+    0.0100
+
+
+Demand =
+
+   1.0e+03 *
+
+  Columns 1 through 5
+
+    1.4000    1.4000    1.4000    1.4140    1.4140
+
+  Columns 6 through 10
+
+    1.4140    1.4281    1.4281    1.4281    1.4424
+
+  Columns 11 through 15
+
+    1.4424    1.4424    1.4568    1.4568    1.4568
+
+  Columns 16 through 20
+
+    1.4714    1.4714    1.4714    1.4861    1.4861
+
+  Columns 21 through 25
+
+    1.4861    1.5010    1.5010    1.5010    1.5160
+
+  Columns 26 through 30
+
+    1.5160    1.5160    1.5312    1.5312    1.5312
+
+  Columns 31 through 35
+
+    1.5465    1.5465    1.5465    1.5619    1.5619
+
+  Columns 36 through 40
+
+    1.5619    1.5776    1.5776    1.5776    1.5933
+
+  Columns 41 through 45
+
+    1.5933    1.5933    1.6093    1.6093    1.6093
+
+  Columns 46 through 50
+
+    1.6254    1.6254    1.6254    1.6416    1.6416
+
+  Columns 51 through 55
+
+    1.6416    1.6580    1.6580    1.6580    1.6746
+
+  Columns 56 through 60
+
+    1.6746    1.6746    1.6914    1.6914    1.6914
+
+  Columns 61 through 65
+
+    1.7083    1.7083    1.7083    1.7253    1.7253
+
+  Columns 66 through 70
+
+    1.7253    1.7426    1.7426    1.7426    1.7600
+
+  Columns 71 through 75
+
+    1.7600    1.7600    1.7776    1.7776    1.7776
+
+  Columns 76 through 80
+
+    1.7954    1.7954    1.7954    1.8134    1.8134
+
+  Column 81
+
+    1.8134
+
+
+D_fluct =
+
+    0.9700
+
+
+D_prob =
+
+     0     1     0
+
+
+DPERM_change =
+
+    0.0500
+
+Where base demand and supply should meet: 1400
+
+rich_a =
+
+      113400
+
+****SUPPLY SETUP***
+
+ans =
+
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4    16    15
+     4     9    25
+     4    15    35
+     2    74    39
+     3    46    40
+     3     2    40
+     3    50    42
+     3     9    43
+     4    14    43
+     3     3    44
+     2    40    46
+     3   102    46
+     3    24    47
+     2    42    47
+     2    24    48
+     4    36    48
+     2    25    49
+     1   289    49
+     4    48    51
+     4    36    54
+     3     5    54
+     3     4    55
+     4    47    56
+     4    37    59
+     4    71    61
+     4    21    64
+     1    12    65
+     4    29    66
+     3     2    66
+     4    88    69
+     4    28    71
+     4    26    74
+     3    21    76
+     3     6    76
+     4    80    76
+     4    16    79
+     4    16    81
+     4    30    84
+     4    33    86
+     1     5    86
+     4    16    89
+     4    22    91
+     4    17    94
+     3     9    96
+     4    19    96
+     4    14    99
+     4    19   101
+     4    16   104
+     4    25   106
+     4    11   109
+     4    11   111
+     4     9   114
+     4    17   116
+     4    12   119
+     4    10   123
+     4     5   128
+     4    14   133
+     4     8   138
+     4     6   143
+     4    21   148
+     4     4   153
+     4     2   163
+     4     2   168
+     4     2   175
+     4     1   185
+     4     3   195
+     4     3   205
+     4     3   225
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+
+Supply curve is constant over time
+****INCENTIVE CURVE***
+
+TotalIncentiveCurve =
+
+           1          70          43        5600
+           1          50          47       10247
+           1          50          49       10417
+           2          50          52        9629
+           2         110          57       28211
+           2          55          49       10754
+           3          90          54       16700
+           3          45          54        5445
+           3          45          67       11354
+
+{Subscripted assignment dimension mismatch.
+
+Error in <a href="matlab:helpUtils.errorDocCallback('findPrice_new', 'C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\findPrice_new.m', 63)" style="font-weight:bold">findPrice_new</a> (<a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\findPrice_new.m',63,0)">line 63</a>)
+    SupplyCurve_t(start:start+size(ROWIncCurve{1},1),
+    :) = ROWIncCurve{1};
+
+Error in <a href="matlab:helpUtils.errorDocCallback('market_DP_new_withSupplyShifts', 'C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m', 569)" style="font-weight:bold">market_DP_new_withSupplyShifts</a> (<a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m',569,0)">line 569</a>)
+                    [market_p, market_q, cap_util,
+                    rewards, faces, firms_q, diag]
+                    = findPrice_new(T, numFirms,
+                    t, MinesOpened_updated,
+                    SUPSHIFT, DPERM, DPERM_change,
+                    el, D_prob, D_fluct,
+                    Demand(t), D} 
+market_DP_new_withSupplyShifts
+**************PARAMETERS USED********************
+****BASIC SETUP***
+
+MODE_MKT_CLEAR_AFTER_ALL_DECIDE =
+
+     1
+
+
+MODE_END_PERIOD_VALUE =
+
+     0
+
+
+SUPPLYCURVE_MODE =
+
+     1
+
+The order of firms making decisions is:       3     2     1
+
+    81
+
+     3
+
+Number of years in simulation: 27
+****DEMAND SETUP***
+
+el =
+
+     1
+
+
+D_0 =
+
+        1400
+
+
+D_growth =
+
+    0.0100
+
+
+Demand =
+
+   1.0e+03 *
+
+  Columns 1 through 5
+
+    1.4000    1.4000    1.4000    1.4140    1.4140
+
+  Columns 6 through 10
+
+    1.4140    1.4281    1.4281    1.4281    1.4424
+
+  Columns 11 through 15
+
+    1.4424    1.4424    1.4568    1.4568    1.4568
+
+  Columns 16 through 20
+
+    1.4714    1.4714    1.4714    1.4861    1.4861
+
+  Columns 21 through 25
+
+    1.4861    1.5010    1.5010    1.5010    1.5160
+
+  Columns 26 through 30
+
+    1.5160    1.5160    1.5312    1.5312    1.5312
+
+  Columns 31 through 35
+
+    1.5465    1.5465    1.5465    1.5619    1.5619
+
+  Columns 36 through 40
+
+    1.5619    1.5776    1.5776    1.5776    1.5933
+
+  Columns 41 through 45
+
+    1.5933    1.5933    1.6093    1.6093    1.6093
+
+  Columns 46 through 50
+
+    1.6254    1.6254    1.6254    1.6416    1.6416
+
+  Columns 51 through 55
+
+    1.6416    1.6580    1.6580    1.6580    1.6746
+
+  Columns 56 through 60
+
+    1.6746    1.6746    1.6914    1.6914    1.6914
+
+  Columns 61 through 65
+
+    1.7083    1.7083    1.7083    1.7253    1.7253
+
+  Columns 66 through 70
+
+    1.7253    1.7426    1.7426    1.7426    1.7600
+
+  Columns 71 through 75
+
+    1.7600    1.7600    1.7776    1.7776    1.7776
+
+  Columns 76 through 80
+
+    1.7954    1.7954    1.7954    1.8134    1.8134
+
+  Column 81
+
+    1.8134
+
+
+D_fluct =
+
+    0.9700
+
+
+D_prob =
+
+     0     1     0
+
+
+DPERM_change =
+
+    0.0500
+
+Where base demand and supply should meet: 1400
+
+rich_a =
+
+      113400
+
+****SUPPLY SETUP***
+
+ans =
+
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4    16    15
+     4     9    25
+     4    15    35
+     2    74    39
+     3    46    40
+     3     2    40
+     3    50    42
+     3     9    43
+     4    14    43
+     3     3    44
+     2    40    46
+     3   102    46
+     3    24    47
+     2    42    47
+     2    24    48
+     4    36    48
+     2    25    49
+     1   289    49
+     4    48    51
+     4    36    54
+     3     5    54
+     3     4    55
+     4    47    56
+     4    37    59
+     4    71    61
+     4    21    64
+     1    12    65
+     4    29    66
+     3     2    66
+     4    88    69
+     4    28    71
+     4    26    74
+     3    21    76
+     3     6    76
+     4    80    76
+     4    16    79
+     4    16    81
+     4    30    84
+     4    33    86
+     1     5    86
+     4    16    89
+     4    22    91
+     4    17    94
+     3     9    96
+     4    19    96
+     4    14    99
+     4    19   101
+     4    16   104
+     4    25   106
+     4    11   109
+     4    11   111
+     4     9   114
+     4    17   116
+     4    12   119
+     4    10   123
+     4     5   128
+     4    14   133
+     4     8   138
+     4     6   143
+     4    21   148
+     4     4   153
+     4     2   163
+     4     2   168
+     4     2   175
+     4     1   185
+     4     3   195
+     4     3   205
+     4     3   225
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+
+Supply curve is constant over time
+****INCENTIVE CURVE***
+
+TotalIncentiveCurve =
+
+           1          70          43        5600
+           1          50          47       10247
+           1          50          49       10417
+           2          50          52        9629
+           2         110          57       28211
+           2          55          49       10754
+           3          90          54       16700
+           3          45          54        5445
+           3          45          67       11354
+
+ROWIncCurve{1}
+
+ans =
+
+     4    20     1
+     4    20     1
+     4    20     1
+     4    20     1
+     4    20     1
+     4    20     1
+
+SupplyCurve_t(start:start+size(ROWIncCurve{1},1), :)
+
+ans =
+
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+
+SupplyCurve_t(1:start-1, :)
+
+ans =
+
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+
+MinesOpened
+
+MinesOpened =
+
+  Columns 1 through 8
+
+     1     1     1     1     1     1     1     1
+
+  Column 9
+
+     1
+
+if system_dependent('IsDebugMode')==1, dbstep; end
+{Subscripted assignment dimension mismatch.
+
+Error in <a href="matlab:helpUtils.errorDocCallback('findPrice_new', 'C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\findPrice_new.m', 63)" style="font-weight:bold">findPrice_new</a> (<a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\findPrice_new.m',63,0)">line 63</a>)
+    SupplyCurve_t(start:start+size(ROWIncCurve{1},1),
+    :) = ROWIncCurve{1};
+
+Error in <a href="matlab:helpUtils.errorDocCallback('market_DP_new_withSupplyShifts', 'C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m', 569)" style="font-weight:bold">market_DP_new_withSupplyShifts</a> (<a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m',569,0)">line 569</a>)
+                    [market_p, market_q, cap_util,
+                    rewards, faces, firms_q, diag]
+                    = findPrice_new(T, numFirms,
+                    t, MinesOpened_updated,
+                    SUPSHIFT, DPERM, DPERM_change,
+                    el, D_prob, D_fluct,
+                    Demand(t), D} 
+size(ROWIncCurve)
+
+ans =
+
+     3     1
+
+market_DP_new_withSupplyShifts
+**************PARAMETERS USED********************
+****BASIC SETUP***
+
+MODE_MKT_CLEAR_AFTER_ALL_DECIDE =
+
+     1
+
+
+MODE_END_PERIOD_VALUE =
+
+     0
+
+
+SUPPLYCURVE_MODE =
+
+     1
+
+The order of firms making decisions is:       3     2     1
+
+    81
+
+     3
+
+Number of years in simulation: 27
+****DEMAND SETUP***
+
+el =
+
+     1
+
+
+D_0 =
+
+        1400
+
+
+D_growth =
+
+    0.0100
+
+
+Demand =
+
+   1.0e+03 *
+
+  Columns 1 through 5
+
+    1.4000    1.4000    1.4000    1.4140    1.4140
+
+  Columns 6 through 10
+
+    1.4140    1.4281    1.4281    1.4281    1.4424
+
+  Columns 11 through 15
+
+    1.4424    1.4424    1.4568    1.4568    1.4568
+
+  Columns 16 through 20
+
+    1.4714    1.4714    1.4714    1.4861    1.4861
+
+  Columns 21 through 25
+
+    1.4861    1.5010    1.5010    1.5010    1.5160
+
+  Columns 26 through 30
+
+    1.5160    1.5160    1.5312    1.5312    1.5312
+
+  Columns 31 through 35
+
+    1.5465    1.5465    1.5465    1.5619    1.5619
+
+  Columns 36 through 40
+
+    1.5619    1.5776    1.5776    1.5776    1.5933
+
+  Columns 41 through 45
+
+    1.5933    1.5933    1.6093    1.6093    1.6093
+
+  Columns 46 through 50
+
+    1.6254    1.6254    1.6254    1.6416    1.6416
+
+  Columns 51 through 55
+
+    1.6416    1.6580    1.6580    1.6580    1.6746
+
+  Columns 56 through 60
+
+    1.6746    1.6746    1.6914    1.6914    1.6914
+
+  Columns 61 through 65
+
+    1.7083    1.7083    1.7083    1.7253    1.7253
+
+  Columns 66 through 70
+
+    1.7253    1.7426    1.7426    1.7426    1.7600
+
+  Columns 71 through 75
+
+    1.7600    1.7600    1.7776    1.7776    1.7776
+
+  Columns 76 through 80
+
+    1.7954    1.7954    1.7954    1.8134    1.8134
+
+  Column 81
+
+    1.8134
+
+
+D_fluct =
+
+    0.9700
+
+
+D_prob =
+
+     0     1     0
+
+
+DPERM_change =
+
+    0.0500
+
+Where base demand and supply should meet: 1400
+
+rich_a =
+
+      113400
+
+****SUPPLY SETUP***
+
+ans =
+
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4     0     0
+     4    16    15
+     4     9    25
+     4    15    35
+     2    74    39
+     3    46    40
+     3     2    40
+     3    50    42
+     3     9    43
+     4    14    43
+     3     3    44
+     2    40    46
+     3   102    46
+     3    24    47
+     2    42    47
+     2    24    48
+     4    36    48
+     2    25    49
+     1   289    49
+     4    48    51
+     4    36    54
+     3     5    54
+     3     4    55
+     4    47    56
+     4    37    59
+     4    71    61
+     4    21    64
+     1    12    65
+     4    29    66
+     3     2    66
+     4    88    69
+     4    28    71
+     4    26    74
+     3    21    76
+     3     6    76
+     4    80    76
+     4    16    79
+     4    16    81
+     4    30    84
+     4    33    86
+     1     5    86
+     4    16    89
+     4    22    91
+     4    17    94
+     3     9    96
+     4    19    96
+     4    14    99
+     4    19   101
+     4    16   104
+     4    25   106
+     4    11   109
+     4    11   111
+     4     9   114
+     4    17   116
+     4    12   119
+     4    10   123
+     4     5   128
+     4    14   133
+     4     8   138
+     4     6   143
+     4    21   148
+     4     4   153
+     4     2   163
+     4     2   168
+     4     2   175
+     4     1   185
+     4     3   195
+     4     3   205
+     4     3   225
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+     4     4   245
+
+Supply curve is constant over time
+****INCENTIVE CURVE***
+
+TotalIncentiveCurve =
+
+           1          70          43        5600
+           1          50          47       10247
+           1          50          49       10417
+           2          50          52        9629
+           2         110          57       28211
+           2          55          49       10754
+           3          90          54       16700
+           3          45          54        5445
+           3          45          67       11354
+
+Price path of different policies, order(CBA)
+
+sim_Prices_1 =
+
+   81.0000
+   78.7888
+   79.0000
+   79.4519
+   80.2464
+   81.0000
+   81.0000
+   81.7418
+   82.5592
+   83.3848
+   84.0000
+   79.2294
+   80.0217
+   80.8219
+   81.0000
+   81.5859
+   82.4018
+   83.2258
+   84.0000
+   84.0000
+   84.1018
+   84.9428
+   85.7922
+   86.0000
+   86.0000
+   86.2938
+   87.1568
+
+
+sim_Prices_2 =
+
+   78.1530
+   78.9345
+   76.8123
+   77.5804
+   78.3562
+   79.0000
+   79.0909
+   79.8818
+   80.6807
+   79.0000
+   78.2412
+   79.0000
+   79.0241
+   79.8143
+   80.6125
+   81.0000
+   78.9019
+   79.0000
+   79.6914
+   80.4883
+   81.0000
+   81.3016
+   82.1147
+   82.9358
+   83.7652
+   84.0000
+   80.3327
+
+
+sim_Prices_3 =
+
+   76.0000
+   71.2276
+   70.9689
+   71.0000
+   71.1728
+   71.8845
+   72.6034
+   73.3294
+   74.0000
+   74.0000
+   74.3849
+   75.1287
+   75.8800
+   76.0000
+   76.0000
+   76.0000
+   76.0000
+   76.0000
+   76.0000
+   76.4933
+   77.2583
+   78.0308
+   78.8112
+   79.0000
+   79.6834
+   80.4802
+   81.0000
+
+Quantity path of different policies: dummy, firm_NPV with game, postive mine NPV
+
+sim_Q_1 =
+
+   1.0e+03 *
+
+    1.4000
+    1.3810
+    1.3911
+    1.3970
+    1.3970
+    1.3978
+    1.4118
+    1.4130
+    1.4130
+    1.4130
+    1.4167
+    1.5170
+    1.5170
+    1.5170
+    1.5288
+    1.5330
+    1.5330
+    1.5330
+    1.5341
+    1.5494
+    1.5630
+    1.5630
+    1.5630
+    1.5748
+    1.5906
+    1.6010
+    1.6010
+
+
+sim_Q_2 =
+
+   1.0e+03 *
+
+    1.4510
+    1.4510
+    1.5060
+    1.5060
+    1.5060
+    1.5087
+    1.5220
+    1.5220
+    1.5220
+    1.5699
+    1.6010
+    1.6015
+    1.6170
+    1.6170
+    1.6170
+    1.6254
+    1.6010
+    1.6150
+    1.6170
+    1.6170
+    1.6229
+    1.6330
+    1.6330
+    1.6330
+    1.6330
+    1.6447
+    1.7370
+
+
+sim_Q_3 =
+
+   1.0e+03 *
+
+    1.4921
+    1.6080
+    1.6300
+    1.6456
+    1.6580
+    1.6580
+    1.6580
+    1.6580
+    1.6594
+    1.6760
+    1.6840
+    1.6840
+    1.6840
+    1.6982
+    1.7151
+    1.7323
+    1.7496
+    1.7671
+    1.7848
+    1.7910
+    1.7910
+    1.7910
+    1.7910
+    1.8046
+    1.8070
+    1.8070
+    1.8134
+
+
+ypos =
+
+    70
+    50
+    50
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+
+
+ypos =
+
+   125
+   100
+    50
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+
+
+ypos =
+
+   170
+   190
+    50
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+     0
+
+policy 1 openings (row = mine #, column = firm #)
+
+sim_openings_1 =
+
+     0     0     0
+     0     0     0
+     0     0     0
+
+policy 2 openings (row = mine #, column = firm #)
+
+sim_openings_2 =
+
+     1     0     0
+    10     0    11
+     0     3     0
+
+policy 3 openings (row = mine #, column = firm #)
+
+sim_openings_3 =
+
+     1     2     2
+     2     0     1
+     3     1     0
+
+[Warning: Ignoring extra legend entries.] 
+[> In <a href="matlab: opentoline('C:\Program Files\MATLAB\R2012b\toolbox\matlab\scribe\legend.m',287,1)">legend at 287</a>
+  In <a href="matlab: opentoline('C:\Users\pererrans\Dropbox\Documents\MSL research 2013\Matlab Codes\ThesisCode\code_SUPSHIFT\market_DP_new_withSupplyShifts.m',1102,1)">market_DP_new_withSupplyShifts at 1102</a>] 
+Total NPV of the three players under base policy is 2.463278e+05 
+
+sim_V_1 =
+
+   1.0e+04 *
+
+    8.9021
+    7.0942
+    8.6365
+
+Total NPV of the three players under the firm-optimal policy is 2.559290e+05 
+
+sim_V_2 =
+
+   1.0e+05 *
+
+    1.0270
+    0.7070
+    0.8253
+
+Total NPV of the three players under mine-optimal policy is 2.136749e+05 
+
+sim_V_3 =
+
+   1.0e+04 *
+
+    8.4910
+    5.8676
+    7.0089
+

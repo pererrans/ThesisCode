@@ -6,6 +6,7 @@ function [ sim_openings_1, sim_Prices_1, sim_Q_1, sim_firm_Q_1, sim_V_1, sim_Vt_
 % Simulate the game with the demand uncertainty. See how the price path
 % unfolds using the optimal policy. Compare against a dummy policy and
 % compare. 
+%% TODO: ADD SUPSHIFT
 
 %how many years we are simulating. T only indicates the number of decision 
 % periods. Market clears once a year at the end of the year

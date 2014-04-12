@@ -4,7 +4,6 @@ function [ market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPr
 % quantity for each of the players, given the set of actions, the state 
 % (what mines are operating), the underlying supply, and the demand (with elasticity)
 % rewards are this period payoffs for the different players
-% TODO: calculate reward for all firms. each row is one firm. 
 
 %find price in the market given the demand, supplycurve, states, actions
 %return a vector of prices and quantities each player for each demand

@@ -8,10 +8,10 @@ function [ nextDPerm ] = demandPermChange(DPERM, price)
 %quantile quantity points
 % P_high_10 = 200;    %ONLY FOR DUMMY SUPPLY MODE
 % P_high_25 = 160;    %ONLY FOR DUMMY SUPPLY MODE
-P_high_10 = 115; %price at this level or higher should add 2 to the perm change
-P_high_25 = 85;
-P_low_10 = 40;
-P_low_25 = 46;
+P_high_10 = 119; %price at this level or higher should add 2 to the perm change
+P_high_25 = 81;
+P_low_10 = 42;
+P_low_25 = 48;
 
 temp_DPERM = DPERM - (price>=P_high_10) - (price>=P_high_25) + (price<=P_low_10) + (price<=P_low_25);
 nextDPerm = min(max(temp_DPERM, 1),5);

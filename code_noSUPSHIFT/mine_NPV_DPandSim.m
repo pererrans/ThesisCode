@@ -2,6 +2,7 @@ function [ sim_openings_3, sim_Prices_3, sim_Q_3, sim_firm_Q_3, sim_V_3, sim_Vt_
     mine_NPV_DPandSim(simNum3, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
     T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm)
 
+
 %number of years considered in mine NPV calculations
 numYearsNPV = 27; 
 

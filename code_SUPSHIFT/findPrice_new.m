@@ -91,16 +91,17 @@ D_cases = [1/D_fluct 1 D_fluct];    %since D_fluct<1, expansion, base, contracti
 
 %determine what the equilibrium Q is for each demand scenario (given the
 %different demand shocks) 
+l_supply = length(newSupply); 
 for j=1:length(D_cases)
     X = D_cases(j); %specify which demand shock scenario
-    for i=1:length(newSupply)
+    for i=1:l_supply
         q = newSupply(i,4);
         if(q==0)
             continue;
         end
         p = X^(1/el)*a*q^(-1/el)*(D_t/D_0)^(1/el);
         %fprintf('demand scenario %d step %d: q=%d, p=%d\n', j, i, q, p);
-        if(i==length(newSupply))
+        if(i>=l_supply)
             err = MException('ResultChk:SupplyOutOfRange', ...
                 'RAN OUT OF SUPPLY CURVE! PLEASE ADD TO SUPPLY CURVE');
             throw(err);

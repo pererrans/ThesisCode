@@ -44,7 +44,7 @@ for(sim=1:simNum3)
         currentFirm = sim_orderOfFirms(t);
         currentIncCurve = TotalIncCurve_byFirm{currentFirm};     
         % 	For each of the incentive mine of this firm that is not open already
-        highestNPV = 0;
+        highestNPV = 0; 
         bestMine = 0;
         bestCapex = 0;
         for(mine=1:numIncMines)

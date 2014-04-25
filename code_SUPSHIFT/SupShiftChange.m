@@ -4,9 +4,16 @@ function [ nextSUPSHIFT ] = SupShiftChange(SUPSHIFT, price)
 
 %the thresholds for the ROW incentive mines to enter and expand the ROW supply
 %
-Expand1 = 84; %60th percentile of the existing ROW supply curve
-Expand2 = 96; %70th percentile of the existing ROW supply curve
-Expand3 = 114; %80th percentile of the existing ROW supply curve
+% SUPPLYMODE = 1 (raw data)
+% Expand1 = 84; %60th percentile of the existing ROW supply curve
+% Expand2 = 96; %70th percentile of the existing ROW supply curve
+% Expand3 = 114; %80th percentile of the existing ROW supply curve
+
+%SUPPLYMODE = 0
+Expand1 = 66.2; %60th percentile of the existing ROW supply curve
+Expand2 = 80.2; %70th percentile of the existing ROW supply curve
+Expand3 = 150.3; %80th percentile of the existing ROW supply curve
+
 
 nextSUPSHIFT = SUPSHIFT; 
 

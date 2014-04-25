@@ -1,6 +1,18 @@
 % Exact DP solution and simulation to a 3-player game in the mineral market
 % Yuanjian Carla Li, version April 1, 2014
 
+%record the profile for performance enhancement
+profile on %-detail builtin -history
+
+criteria2vary = 'el'; 
+
+ordering_list = cell(3,1); 
+ordering_list{1} = 0.5; 
+ordering_list{2} = 1; 
+ordering_list{3} = 2; 
+
+for(list_num=2:3)
+
 %naming for the output in terms of firm decision ordering
 ordering = 'ABC'; 
 
@@ -19,9 +31,8 @@ switch ordering
         decision_order = [3 2 1];
 end
 
-%record the profile for performance enhancement
-profile on %-detail builtin -history
-diary([ordering '_output_log']);
+%record log
+diary([ordering '_output_log_' criteria2vary '_' num2str(list_num)]);
 diary on;
 
 %%
@@ -40,7 +51,7 @@ numIncMines = 3; %number of incentive mines per firm
 %Tinto one. 1 is for the real Rio Tinto one. -1 is for the real Rio Tinto one except the 
 %capex is reduced 10x so that shorter time horizon can still yield mine opening.
 % -2 is for the dummy one for testing purpose. -3 is for the Rio Tinto one with more aggregation (testing purpose) 
-SUPPLYCURVE_MODE = 1;
+SUPPLYCURVE_MODE = 0;
 
 %ROWINCCURVE_MODE: 1 is for ROW Incentive curve being mines that will
 %always operate. 2 is for ROW curve with mines that have specified opex
@@ -114,22 +125,22 @@ CapUtils_mono = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
 %%
 %%Demand settings
 %demand elasticity
-el = 1; 
+el = ordering_list{list_num}; 
 %demand level and growth
 %D_0 = 1100;   %base demand
-D_0 = 1400;   %base demand
+D_0 = 2800;   %base demand
 D_growth = 0.01;   %demand growth rate
 
 %populate the demand series 
 Demand = ones(1,T)*D_0;
 Demand_yr = ones(1,T_years)*D_0; 
-for t_yr=2:14
+for t_yr=2:T_years
     Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1+D_growth);
 end
 
-for t_yr=15:T_years
-    Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1-D_growth);
-end
+% for t_yr=15:T_years
+%     Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1-D_growth);
+% end
 
 
 if(T==T_years)
@@ -158,17 +169,17 @@ DPERM_change = 0.05; % +5% change in non-shocked demand if DPERM is 1, and 10% i
 %Settings for new mines belonging to the big 3 players, ie incentive curves. The columns are ownerID, capacity, opex, and
 %capex respectively
 if(SUPPLYCURVE_MODE==0)
-    IncentiveCurveA = [1	70	43	5600
-                        1	50	47	10247
-                        1	50	49	10417];
+    IncentiveCurveA = [1	140	26	6956
+                        1	97	30	13119
+                        1	107	29	12853];
 
-    IncentiveCurveB = [2	50	52	9629
-                        2	110	57	28211
-                        2	55	49	10754];
+    IncentiveCurveB = [2	104	33	12349
+                        2	229	34	35345
+                        2	113	32	13233];
 
-    IncentiveCurveC = [3	90	54	16700
-                        3	45	54	5445
-                        3	45	67	11354];
+    IncentiveCurveC = [3	178	33	21474
+                        3	94	35	7444
+                        3	90	40	15603];
     
 elseif(SUPPLYCURVE_MODE==1)
     IncentiveCurveA = [1	70	43	5600
@@ -277,7 +288,108 @@ end
 % doesn't need to be resized and slow down the code in findprice_new
 incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1) + size(ROWIncCurve{3},1); 
 SupplyCurve = zeros(95+incSupLength,3,T);
-if(SUPPLYCURVE_MODE==1)
+if(SUPPLYCURVE_MODE==0)
+    %fill the owner of the placeholders for the potential incentive mines with 
+    % 4 to prevent index 0 in a later part of the program for a mine not opened
+    SupplyCurve(1:incSupLength,1,1) = 4; 
+    %inflated highest price Q to never run out of supply
+    SupplyCurve(incSupLength+1:end,:,1) = [4	32	9.7
+                        4	19	15.6
+                        4	32	21.8
+                        3	5	24.1
+                        3	95	24.5
+                        4	30	24.9
+                        2	157	25.5
+                        3	18	26.2
+                        3	98	26.4
+                        3	6	27.4
+                        3	49	29.6
+                        2	50	29.7
+                        2	77	29.8
+                        2	89	29.9
+                        3	187	30
+                        2	53	30.2
+                        1	611	30.2
+                        4	67	30.4
+                        4	97	30.6
+                        3	9	33.8
+                        4	73	34.7
+                        3	9	35.2
+                        4	95	37
+                        4	140	38.5
+                        4	76	39.5
+                        1	24	40.3
+                        4	60	41.2
+                        4	41	41.4
+                        4	179	41.4
+                        3	4	42
+                        4	57	42.8
+                        3	43	45.3
+                        3	12	46
+                        4	164	46.9
+                        4	53	47.2
+                        4	30	48
+                        4	33	49
+                        1	9	51.1
+                        4	59	52.9
+                        4	66	52.9
+                        4	34	53.5
+                        4	38	56.3
+                        4	46	56.7
+                        4	34	57.9
+                        3	19	60.7
+                        4	27	61.6
+                        4	31	62.5
+                        4	38	66.2
+                        4	54	66.2
+                        4	22	70.1
+                        4	36	72
+                        4	21	73
+                        4	19	73.8
+                        4	10	77.5
+                        4	19	79.4
+                        4	24	80.2
+                        4	26	83.2
+                        4	16	85.6
+                        4	42	92.2
+                        4	11	97.1
+                        4	8	97.2
+                        4	4	104.3
+                        4	4	105.9
+                        4	4	107.5
+                        4	2	112.7
+                        4	5	126
+                        4	6	130.2
+                        4	7	138.7
+                        4	9	143.2
+                        4	8	144.8
+                        4	8	146.1
+                        4	6	147.4
+                        4	8	150.2
+                        4	8	150.3
+                        4	8	150.3
+                        4	8	150.7
+                        4	8	152.3
+                        4	8	152.8
+                        4	8	153
+                        4	8	153.2
+                        4	8	153.2
+                        4	8	154.4
+                        4	7	155.2
+                        4	8	155.6
+                        4	9	155.7
+                        4	8	156.1
+                        4	8	157.2
+                        4	8	157.6
+                        4	8	157.7
+                        4	8	158.3
+                        4	8	159.8
+                        4	8	160
+                        4	8	162.8
+                        4	7	167.6
+                        4	7	168.6];
+    
+elseif(SUPPLYCURVE_MODE==1)
     %fill the owner of the placeholders for the potential incentive mines with 
     % 4 to prevent index 0 in a later part of the program for a mine not opened
     SupplyCurve(1:incSupLength,1,1) = 4; 
@@ -835,7 +947,7 @@ title(['Price Path (' ordering ')']);
 xlabel('Year');
 ylabel('Real price');
 
-saveas(fig, [ordering '_price path.jpg']); 
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_price path.jpg']); 
 
 %FIGURE 2 compare the market quantity over time
 fig = figure(2);
@@ -861,7 +973,7 @@ set(leg1, 'Color', 'none');
 title(['Market Clearing Quantity (' ordering ')']);
 xlabel('Year');
 ylabel('Quantity');
-saveas(fig, [ordering '_production path.jpg']); 
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_production path.jpg']); 
 
 
 %%%
@@ -1021,7 +1133,7 @@ annotation('textbox', [0 0.9 1 0.1], ...
 'EdgeColor', 'none', ...
 'HorizontalAlignment', 'center')
 
-saveas(fig, [ordering '_new mines openings_Quantity.jpg']); 
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_new mines openings_Quantity.jpg']); 
 
 %%%%
 %plot the new openings - opex versus price
@@ -1126,7 +1238,7 @@ annotation('textbox', [0 0.9 1 0.1], ...
 'EdgeColor', 'none', ...
 'HorizontalAlignment', 'center')
 
-saveas(fig, [ordering '_new mines openings_Opex.jpg']); 
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_new mines openings_Opex.jpg']); 
 
 
 %display summary of new openings over time
@@ -1152,7 +1264,7 @@ set(leg1, 'Color', 'none');
 set(gca, 'XTick', 1:numFirms, 'XTickLabel', {'Firm A', 'Firm B', 'Firm C'}); 
 title(['NPV Comparison (' ordering ')']);
 ylabel('NPV');
-saveas(fig, [ordering '_NPV comparison.jpg']); 
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_NPV comparison.jpg']); 
 
 %display NPV of the different players under diff scenarios
 fprintf('Total NPV of the three players under base policy is %d \n', sum(sim_V_1));
@@ -1247,10 +1359,43 @@ for varywho = 1:numFirms
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center')
     
-    saveas(fig,  sprintf( '%s_NPV_variations %s.jpg', ordering, firmNames(varywho)) ); 
+    saveas(fig,  sprintf( '%s_NPV_variations_%s_%d_%s.jpg', ordering, criteria2vary, list_num, firmNames(varywho)) ); 
+end
+
+%FIGURE 9 compare the turnover
+colormap(lines(7)); 
+fig = figure(9);
+clf('reset');
+set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.4]); 
+time = 1:T_years;
+plot(time, sim_Prices_1.*sim_Q_1, time, sim_Prices_2.*sim_Q_2, time, sim_Prices_3.*sim_Q_3, time, sim_Prices_mono.*sim_Q_mono,'LineWidth',2);
+% p_min = min(min([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_mono]))-5;
+% p_max = max(max([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_mono]))+5;
+% axis([min(time) 30 p_min p_max])
+fprintf('Price path of different policies, order(%s)\n', ordering);
+sim_Prices_1
+sim_Prices_2
+sim_Prices_3
+sim_Prices_mono
+
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+set(leg1, 'Box', 'off');
+set(leg1, 'Color', 'none');
+
+
+title(['Turnover Path (' ordering ')']);
+xlabel('Year');
+ylabel('Turnover');
+
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_turnover path.jpg']); 
+
+save([ordering '_' num2str(list_num) '_variables_list']);
+
+
+diary off
+
 end
 
 %%
 %Report the recorded performance diagnostic profile
 profile report
-diary off

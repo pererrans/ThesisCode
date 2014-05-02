@@ -100,7 +100,7 @@ for(sim=1:simNum)
             D_index = randsample(length(sim_D_prob), 1, true, sim_D_prob);
             D_cases = sim_Demand(t).*[1/sim_D_fluct 1 sim_D_fluct];
             sim_demand = D_cases(D_index);
-            [market_p_1, market_q_1, cap_util_1, rewards_1, faces_1, firms_q_1, diag_1] = findPrice_new(T, numFirms, t, sim_m_1, sim_supshift_1, sim_dperm_1, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
+            [market_p_1, market_q_1, cap_util_1, rewards_1, ~, faces_1, firms_q_1, diag_1] = findPrice_new(T, numFirms, t, sim_m_1, sim_supshift_1, sim_dperm_1, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
             
             %figure out which year to store the results in
             t_yr = round(t/decisions_in_dt);

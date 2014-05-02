@@ -45,7 +45,7 @@ MinesOpened = MinesOpened + [and(currentFirm==1,currentMine==1),and(currentFirm=
 %because it doesn't take into account other firms potentially opening in
 %this period before price clears. 
 
-[market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened, sim_supshift, sim_dperm, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
+[market_p, market_q, cap_util, rewards, ~, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened, sim_supshift, sim_dperm, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
 all_price_paths(1, :) = sum(sim_D_prob .* market_p);
 all_util_paths(1,:) = cap_util(1);
 all_util_paths(2,:) = cap_util(2);
@@ -142,7 +142,7 @@ while(and(and(t<T, diff>conv_criteria), counter(1)<3))
         %if it's time to clear price, figure out what the price is and
         %store it
         if(mod(period, decisions_in_dt) == 0)
-            [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, period, MinesOpened_sc2, sim_supshift_sc2, sim_dperm_sc2, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_Demand(period), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
+            [market_p, market_q, cap_util, rewards, ~, faces, firms_q, diag] = findPrice_new(T, numFirms, period, MinesOpened_sc2, sim_supshift_sc2, sim_dperm_sc2, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_Demand(period), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
             all_price_paths(2, period_yr) = sum(sim_D_prob .* market_p);
             all_util_paths(4,period_yr) = cap_util(1);
             all_util_paths(5,period_yr) = cap_util(2);
@@ -219,7 +219,7 @@ while(and(and(t<T, diff>conv_criteria),counter(2)<3))
         %if it's time to clear price, figure out what the price is and
         %store it
         if(mod(period, decisions_in_dt) == 0)
-            [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, period, MinesOpened_sc3, sim_supshift_sc3, sim_dperm_sc3, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_Demand(period), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
+            [market_p, market_q, cap_util, rewards, ~, faces, firms_q, diag] = findPrice_new(T, numFirms, period, MinesOpened_sc3, sim_supshift_sc3, sim_dperm_sc3, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_Demand(period), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
             all_price_paths(3, period_yr) = sum(sim_D_prob .* market_p);
             all_util_paths(7,period_yr) = cap_util(1);
             all_util_paths(8,period_yr) = cap_util(2);

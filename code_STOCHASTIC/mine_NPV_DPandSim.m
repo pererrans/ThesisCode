@@ -1,4 +1,4 @@
-function [ sim_openings_3, sim_Prices_3, sim_Q_3, sim_D_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
+function [ sim_openings_3, sim_Prices_3, sim_Q_3, sim_D_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_Turnovers_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
     mine_NPV_DPandSim(simNum3, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
     T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm, ROWIncCurve)
 
@@ -18,9 +18,10 @@ sim_CapUtil_3 = zeros(T_years, simNum3);
 sim_Faces_3 = zeros(T_years, simNum3); %when it crossed the cliff face of supply curve
 sim_V_3 = zeros(numFirms, simNum3);
 sim_Vt_3 = zeros(T_years, numFirms, simNum3);
+sim_Turnovers_3 = zeros(T_years, numFirms, simNum3);
 sim_openings_3 = zeros(numIncMines, numFirms, simNum3);
 sim_diag_3 = cell(T_years,simNum3);    %cell array to store the diagnostics from each market clearing
-sim_firm_Q_3 = zeros(numFirms, T_years, simNum3);
+sim_firm_Q_3 = zeros(T_years, numFirms, simNum3);
 exp_NPV_record = ones(numIncMines, numFirms, T_years, simNum3)*-1; %what the NPV calculated for making the optimal opening choice were, for later reference
 
 for(sim=1:simNum3)
@@ -103,7 +104,7 @@ for(sim=1:simNum3)
             D_cases = sim_Demand(t).*[1/sim_D_fluct 1 sim_D_fluct];
             sim_demand = D_cases(D_index);
             sim_D_3(t_yr,sim) = sim_demand; 
-            [market_p_3, market_q_3, cap_util_3, rewards_3, faces_3, firms_q_3, diag_3] = findPrice_new(T, numFirms, t, MinesOpened, sim_supshift, sim_dperm, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
+            [market_p_3, market_q_3, cap_util_3, rewards_3, turnovers_3, faces_3, firms_q_3, diag_3] = findPrice_new(T, numFirms, t, MinesOpened, sim_supshift, sim_dperm, sim_DPERM_change, el, sim_D_prob, sim_D_fluct, sim_demand, D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
 
             %store the function diagnostics
             sim_diag_3{t_yr,sim} = diag_3(3,:);	%HARDCODE ALERT. getting the middle case
@@ -118,8 +119,11 @@ for(sim=1:simNum3)
                 r_3 = rewards_3(i,2) - capex_3(i);
                 sim_Vt_3(t_yr,i,sim) = r_3;            
                 sim_V_3(i, sim) = sim_V_3(i, sim) + r_3*(1-sim_dr)^(t_yr-1);
-                sim_firm_Q_3(i,t_yr,sim) = firms_q_3(i,2);            
+                sim_Turnovers_3(t_yr,i,sim) = turnovers_3(i,2); 
+                sim_firm_Q_3(t_yr,i,sim) = firms_q_3(i,2);            
             end
+            
+            sim_Turnovers_3(t_yr,numFirms+1,sim) = sum(sim_Turnovers_3(t_yr,1:numFirms,sim));
             
             %update the states for the next period
             [sim_dperm] = demandPermChange(sim_dperm, market_p_3(2));

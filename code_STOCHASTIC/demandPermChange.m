@@ -9,10 +9,10 @@ function [ nextDPerm ] = demandPermChange(DPERM, price)
 % P_high_10 = 200;    %ONLY FOR DUMMY SUPPLY MODE
 % P_high_25 = 160;    %ONLY FOR DUMMY SUPPLY MODE
 %SUPPLYMODE = 1 (raw data)
-P_high_10 = 119; %price at this level or higher should add 2 to the perm change
-P_high_25 = 81;
-P_low_10 = 42;
-P_low_25 = 48;
+% P_high_10 = 119; %price at this level or higher should add 2 to the perm change
+% P_high_25 = 81;
+% P_low_10 = 42;
+% P_low_25 = 48;
 
 %SUPPLYMODE = 0
 P_high_10 = 77.5; %price at this level or higher should add 2 to the perm change

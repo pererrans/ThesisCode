@@ -1,4 +1,4 @@
-function [ market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened, SUPSHIFT, DPERM, DPERM_change, el, D_prob, D_fluct, D_t, D_0, SupplyCurve_t, a, IncentiveCurve, ROWIncCurve)
+function [ market_p, market_q, cap_util, rewards, turnovers, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened, SUPSHIFT, DPERM, DPERM_change, el, D_prob, D_fluct, D_t, D_0, SupplyCurve_t, a, IncentiveCurve, ROWIncCurve)
 % Yuanjian Carla Li, January 28, 2013
 % The purpose of this model is to figure out the equilibrium price and 
 % quantity for each of the players, given the set of actions, the state 
@@ -33,6 +33,7 @@ MODE_supplyTruncate = true;
 market_p = zeros(1,length(D_prob));
 market_q = zeros(1,length(D_prob));
 rewards = zeros(numFirms,length(D_prob));
+turnovers = zeros(numFirms,length(D_prob));
 costs = zeros(numFirms,length(D_prob));
 firms_q = zeros(numFirms, length(D_prob));
 cap_util = zeros(1,length(D_prob));
@@ -153,6 +154,7 @@ for j=1:length(D_cases)
             %calculate rewards of the firms (excluding capex)
             for(firm = 1:numFirms)
                 rewards(firm,j) = cap_util(j)*((market_p(j)*firms_q(firm,j)) - costs(firm,j));
+                turnovers(firm,j) = cap_util(j)*(market_p(j)*firms_q(firm,j)); 
             end
             
             %adjust the firm_q for capacity utilization 

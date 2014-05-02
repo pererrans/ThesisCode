@@ -8,14 +8,27 @@ profile on %-detail builtin -history
 s = RandStream('mt19937ar','Seed',1);
 RandStream.setGlobalStream(s);
 
-criteria2vary = 'el'; 
+% criteria2vary = 'el'; 
+criteria2vary = 'Dperturb';
 
-ordering_list = cell(3,1); 
-ordering_list{1} = 0.5; 
-ordering_list{2} = 1; 
-ordering_list{3} = 2; 
+%for el
+% ordering_list = cell(4,1); 
+% ordering_list{1} = 0.5; 
+% ordering_list{2} = 1; 
+% ordering_list{3} = 2; 
+% ordering_list{4} = 0.75; 
+% ordering_list{5} = 0.6; 
+% ordering_list{6} = 0.1; 
 
-for(list_num=2:2)
+%for perturbation 
+perturb_list = cell(4,1); 
+perturb_list{1} = 0.8; 
+perturb_list{2} = 0.85; 
+perturb_list{3} = 0.9; 
+perturb_list{4} = 0.95; 
+
+
+for(list_num=1:4)
     
 %reset the random stream to start at the beginning for repeatability
 stream = RandStream.getGlobalStream;
@@ -132,7 +145,7 @@ CapUtils_mono = zeros(2,2,2,2,2,2,2,2,2,numFirms,5,4,T);
 %%
 %%Demand settings
 %demand elasticity
-el = ordering_list{list_num}; 
+el = 0.5; 
 %demand level and growth
 %D_0 = 1100;   %base demand
 D_0 = 2800;   %base demand
@@ -162,8 +175,8 @@ else
     end 
 end
 
-%demand fluctuation range and prob
-D_fluct = 0.97;  %TODO: THIS CANNOT BE ZERO AT THE MOMENT. NEED TO SAFETY CHECK
+%demand perturbation range and prob
+D_fluct = perturb_list{list_num};  %TODO: THIS CANNOT BE ZERO AT THE MOMENT. NEED TO SAFETY CHECK
 D_prob = [0.1,0.8,0.1];
 
 %the change associated with a state variable on whether demand has been permanently changed due to a
@@ -702,7 +715,7 @@ for t=T:-1:1
 
             if(or(MODE_MKT_CLEAR_AFTER_ALL_DECIDE == 0, mod(t,decisions_in_dt)==0)) 
                 %market clearing and reward calculation 
-                [market_p, market_q, cap_util, rewards, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, SUPSHIFT, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
+                [market_p, market_q, cap_util, rewards, ~, faces, firms_q, diag] = findPrice_new(T, numFirms, t, MinesOpened_updated, SUPSHIFT, DPERM, DPERM_change, el, D_prob, D_fluct, Demand(t), D_0, SupplyCurve(:,:,t), rich_a, TotalIncentiveCurve, ROWIncCurve);
                 %return   %DEBUG this break is just to run the findPrice function once
                 %display('As turn - prices');
 
@@ -892,19 +905,19 @@ sim_diag_names = cell(1,1);
 %conditions for each policy
 stream = RandStream.getGlobalStream;
 reset(stream);
-[sim_openings_1, sim_Prices_1, sim_Q_1, sim_D_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1, sim_diag_names] ...
+[sim_openings_1, sim_Prices_1, sim_Q_1, sim_D_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_Turnovers_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1, sim_diag_names] ...
     = simulation(Xa_1, Xb_1, Xc_1, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
     IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve);
 
 stream = RandStream.getGlobalStream;
 reset(stream);
-[sim_openings_2, sim_Prices_2, sim_Q_2, sim_D_2, sim_firm_Q_2, sim_V_2, sim_Vt_2, sim_CapUtil_2, sim_Faces_2, sim_diag_2, ~] ...
+[sim_openings_2, sim_Prices_2, sim_Q_2, sim_D_2, sim_firm_Q_2, sim_V_2, sim_Vt_2, sim_Turnovers_2, sim_CapUtil_2, sim_Faces_2, sim_diag_2, ~] ...
     = simulation(Xa_2, Xb_2, Xc_2, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
     IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve);
 
 stream = RandStream.getGlobalStream;
 reset(stream);
-[sim_openings_mono, sim_Prices_mono, sim_Q_mono, sim_D_mono, sim_firm_Q_mono, sim_V_mono, sim_Vt_mono, sim_CapUtil_mono, sim_Faces_mono, sim_diag_mono, ~] ...
+[sim_openings_mono, sim_Prices_mono, sim_Q_mono, sim_D_mono, sim_firm_Q_mono, sim_V_mono, sim_Vt_mono, sim_Turnovers_mono,sim_CapUtil_mono, sim_Faces_mono, sim_diag_mono, ~] ...
     = simulation(Xa_mono, Xb_mono, Xc_mono, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
     IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve);
 
@@ -918,7 +931,7 @@ simNum3 = simNum;
 
 stream = RandStream.getGlobalStream;
 reset(stream);
-[sim_openings_3, sim_Prices_3, sim_Q_3, sim_D_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
+[sim_openings_3, sim_Prices_3, sim_Q_3, sim_D_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_Turnovers_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
     mine_NPV_DPandSim(simNum3, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
     T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm, ROWIncCurve);
 
@@ -936,7 +949,6 @@ reset(stream);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%PLOTTING OF THE RESULTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 %Plots for comparison the price, quantity and NPV outcomes under policy 1 and 2
 %FIGURE 1 compare the price
@@ -961,8 +973,7 @@ sim_Prices_3
 sim_Prices_mono
 
 leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
-set(leg1, 'Box', 'off');
-set(leg1, 'Color', 'none');
+set(leg1, 'Box', 'off', 'Color', 'none');
 
 
 title(['Price Path (' ordering ')']);
@@ -1401,15 +1412,13 @@ fig = figure(9);
 clf('reset');
 set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.4]); 
 time = 1:T_years;
-plot(time, sim_Prices_1.*sim_Q_1, time, sim_Prices_2.*sim_Q_2, time, sim_Prices_3.*sim_Q_3, time, sim_Prices_mono.*sim_Q_mono,'LineWidth',2);
-% p_min = min(min([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_mono]))-5;
-% p_max = max(max([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_mono]))+5;
-% axis([min(time) 30 p_min p_max])
-fprintf('Price path of different policies, order(%s)\n', ordering);
-sim_Prices_1
-sim_Prices_2
-sim_Prices_3
-sim_Prices_mono
+
+plot(time, sim_Prices_1(:,1).*sim_Q_1(:,1), time, sim_Prices_2(:,1).*sim_Q_2(:,1), time, sim_Prices_3(:,1).*sim_Q_3(:,1), time, sim_Prices_mono(:,1).*sim_Q_mono(:,1),'LineWidth',2);
+hold on
+plot(time, max(sim_Prices_1.*sim_Q_1,[],2), '--',time, max(sim_Prices_2.*sim_Q_2,[],2), '--',time, max(sim_Prices_3.*sim_Q_3,[],2),'--', time, max(sim_Prices_mono.*sim_Q_mono,[],2),'--', 'LineWidth',1);
+hold on
+plot(time, min(sim_Prices_1.*sim_Q_1,[],2), '--',time, min(sim_Prices_2.*sim_Q_2,[],2), '--',time, min(sim_Prices_3.*sim_Q_3,[],2),'--', time, min(sim_Prices_mono.*sim_Q_mono,[],2),'--', 'LineWidth',1);
+hold off
 
 leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
 set(leg1, 'Box', 'off');
@@ -1422,17 +1431,190 @@ ylabel('Turnover');
 
 saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_turnover path.jpg']); 
 
-
-%Figure 10 Summarize the openings of the different policies
-colormap(lines(7)); 
+%Figure 10 compares the turnover of each of the 3 firms (and in total) under different policies
 fig = figure(10);
+clf('reset');
+set(fig, 'units','normalized','position',[0.1 0.1 0.5 1]); 
+colormap(lines(10)); 
+
+graph_names = {'Firm A'; 'Firm B'; 'Firm C'; 'Firm A+B+C'}; 
+for(i=1:4)
+    subplot(4,1,i);
+    %plot the turnover path for each firm
+    plot(time, sim_Turnovers_1(:,i,1), time, sim_Turnovers_2(:,i,1), time, sim_Turnovers_3(:,i,1), time, sim_Turnovers_mono(:,i,1),'LineWidth',2);
+    hold on
+    plot(time, max(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_3(:,i,:)),[],2),'--', time, max(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    hold on
+    plot(time, min(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_3(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    hold off
+    title(graph_names{i});
+    ylabel('Real price');
+
+end
+xlabel('Year');
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+set(leg1, 'Box', 'off', 'Color', 'none');
+
+annotation('textbox', [0 0.9 1 0.1], ...
+'String', ['Turnover in each period (' ordering ')'], ...
+'EdgeColor', 'none', ...
+'HorizontalAlignment', 'center')
+
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_turnover comparison.jpg']); 
+
+%Figure 11 summarizes the price-quantity relationship for the different
+%policies
+colormap(lines(7)); 
+fig = figure(11);
+clf('reset');
+
+plot(sim_Q_1(:,1), sim_Prices_1(:,1), sim_Q_2(:,1), sim_Prices_2(:,1), sim_Q_3(:,1), sim_Prices_3(:,1), sim_Q_mono(:,1), sim_Prices_mono(:,1),'LineWidth',2);
+
+title(['Price vs Quantity (' ordering ')']);
+xlabel('Market Quantity');
+ylabel('Price');
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+set(leg1, 'Box', 'off', 'Color', 'none');
+
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_Price vs Quantity.jpg']); 
+
+%%%%
+%Figure 12 Summarize the mine openings under the different policies
+%%%%
+
+%reshape the mine opening data for display
+datatable = cell(numFirms*numIncMines, simNum+2);
+
+for(f=1:numFirms)
+    for(m=1:numIncMines)
+        datatable{(numIncMines*(f-1)+m),1} = firmNames(f); 
+        datatable{(numIncMines*(f-1)+m),2} = [firmNames(f),'-',num2str(m)];
+        for(sim=1:simNum)
+            datatable{(numIncMines*(f-1)+m),2+sim} = sim_openings_1(m,f,sim); 
+        end
+    end
+end
+datatable_1 = datatable;
+
+for(f=1:numFirms)
+    for(m=1:numIncMines)
+        datatable{(numIncMines*(f-1)+m),1} = firmNames(f); 
+        datatable{(numIncMines*(f-1)+m),2} = [firmNames(f),'-',num2str(m)];
+        for(sim=1:simNum)
+            datatable{(numIncMines*(f-1)+m),2+sim} = sim_openings_2(m,f,sim); 
+        end
+    end
+end
+datatable_2 = datatable;
+
+for(f=1:numFirms)
+    for(m=1:numIncMines)
+        datatable{(numIncMines*(f-1)+m),1} = firmNames(f); 
+        datatable{(numIncMines*(f-1)+m),2} = [firmNames(f),'-',num2str(m)];
+        for(sim=1:simNum)
+            datatable{(numIncMines*(f-1)+m),2+sim} = sim_openings_3(m,f,sim); 
+        end
+    end
+end
+datatable_3 = datatable;
+
+for(f=1:numFirms)
+    for(m=1:numIncMines)
+        datatable{(numIncMines*(f-1)+m),1} = firmNames(f); 
+        datatable{(numIncMines*(f-1)+m),2} = [firmNames(f),'-',num2str(m)];
+        for(sim=1:simNum)
+            datatable{(numIncMines*(f-1)+m),2+sim} = sim_openings_mono(m,f,sim); 
+        end
+    end
+end
+datatable_mono = datatable;
+
+%draw Figure 12
+colormap(lines(7)); 
+fig = figure(12);
+set(fig, 'units','pixels','position',[50 50 800 550]); 
+clf('reset'); 
+
+cnames = [{'Firm', 'Mine'}, num2cell((1:simNum))];
+rnames = {}; 
+width = cell(1,simNum); 
+width(:) = {25}; 
+
+annotation('textbox', [0 0.8 0.5 0.1], ...
+'String', ['No new openings policy'], ...
+'EdgeColor', 'none', 'FitHeightToText', 'on', ...
+'HorizontalAlignment', 'center')
+
+tab_1 = uitable('Parent',fig,'Data',datatable_1,'ColumnName',cnames,... 
+            'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20 20+250 370 200]);
+
+annotation('textbox', [0.5 0.8 0.5 0.1], ...
+'String', ['Best firm-NPV policy'], ...
+'EdgeColor', 'none', 'FitHeightToText', 'on', ...
+'HorizontalAlignment', 'center')
+
+tab_2 = uitable('Parent',fig,'Data',datatable_2,'ColumnName',cnames,... 
+            'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20+400 20+250 370 200]);
+
+annotation('textbox', [0 0.35 0.5 0.1], ...
+'String', ['Positive mine-NPV policy'], ...
+'EdgeColor', 'none', 'FitHeightToText', 'on', ...
+'HorizontalAlignment', 'center')
+tab_3 = uitable('Parent',fig,'Data',datatable_2,'ColumnName',cnames,... 
+            'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20 20 370 200]);
+
+annotation('textbox', [0.5 0.35 0.5 0.1], ...
+'String', ['Cartel policy'], ...
+'EdgeColor', 'none', 'FitHeightToText', 'on', ...
+'HorizontalAlignment', 'center')
+tab_mono = uitable('Parent',fig,'Data',datatable_2,'ColumnName',cnames,... 
+            'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20+400 20 370 200]);
+
+annotation('textbox', [0 0.87 1 0.1], ...
+'String', ['Mine opening timing in different simulations (' ordering ')'], ...
+'EdgeColor', 'none', ...
+'HorizontalAlignment', 'center')
 
 
 saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_openings summary.jpg']); 
 
+%%%%
+%Figure 13 summarizes the cashflow under the different policies
+%%%%
+fig = figure(13);
+clf('reset');
+set(fig, 'units','normalized','position',[0.1 0.1 0.5 1]); 
+colormap(lines(10)); 
 
-save([ordering '_' num2str(list_num) '_variables_list']);
+graph_names = {'Firm A'; 'Firm B'; 'Firm C'; 'Firm A+B+C'}; 
+for(i=1:4)
+    subplot(4,1,i);
+    %plot the turnover path for each firm
+    plot(time, sim_Turnovers_1(:,i,1), time, sim_Turnovers_2(:,i,1), time, sim_Turnovers_3(:,i,1), time, sim_Turnovers_mono(:,i,1),'LineWidth',2);
+    hold on
+    plot(time, max(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_3(:,i,:)),[],2),'--', time, max(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    hold on
+    plot(time, min(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_3(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    hold off
+    title(graph_names{i});
+    ylabel('Real price');
+
+end
+xlabel('Year');
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+set(leg1, 'Box', 'off', 'Color', 'none');
+
+annotation('textbox', [0 0.9 1 0.1], ...
+'String', ['Turnover in each period (' ordering ')'], ...
+'EdgeColor', 'none', ...
+'HorizontalAlignment', 'center')
+
+saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_undisc cashflow comparison.jpg']); 
+
+
+save([criteria2vary '_' num2str(list_num) '_' ordering '_variables_list']);
 diary off
+
 end
 
 %%

@@ -1,4 +1,4 @@
-function [ sim_openings_3, sim_Prices_3, sim_Q_3, sim_D_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_Turnovers_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
+function [ sim_openings_3, sim_Prices_3, sim_Q_3, sim_D_3, sim_firm_Q_3, sim_V_3, sim_Vt_3, sim_ProfitCF_3, sim_Turnovers_3, sim_CapUtil_3, sim_Faces_3, sim_diag_3] = ...
     mine_NPV_DPandSim(simNum3, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
     T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm, ROWIncCurve)
 
@@ -18,20 +18,27 @@ sim_CapUtil_3 = zeros(T_years, simNum3);
 sim_Faces_3 = zeros(T_years, simNum3); %when it crossed the cliff face of supply curve
 sim_V_3 = zeros(numFirms, simNum3);
 sim_Vt_3 = zeros(T_years, numFirms, simNum3);
-sim_Turnovers_3 = zeros(T_years, numFirms, simNum3);
+sim_ProfitCF_3 = zeros(T_years, numFirms, simNum3);
+sim_Turnovers_3 = zeros(T_years, numFirms+1, simNum3);
 sim_openings_3 = zeros(numIncMines, numFirms, simNum3);
 sim_diag_3 = cell(T_years,simNum3);    %cell array to store the diagnostics from each market clearing
 sim_firm_Q_3 = zeros(T_years, numFirms, simNum3);
-exp_NPV_record = ones(numIncMines, numFirms, T_years, simNum3)*-1; %what the NPV calculated for making the optimal opening choice were, for later reference
+exp_NPV_record_mine = ones(numIncMines, numFirms, T_years, simNum3)*-1; %what the NPV calculated for making the optimal opening choice were, for later reference
+exp_NPV_record_firm = ones(numIncMines, numFirms, T_years, simNum3)*-1; %what the NPV calculated for making the optimal opening choice were, for later reference
 
 for(sim=1:simNum3)
     
     if(sim==1) 
         sim_D_prob=[0 1 0];
+    elseif(sim==2)
+        sim_D_prob=[1 0 0];
+    elseif(sim==3)
+        sim_D_prob=[0 0 1];
     else
         sim_D_prob = sim_D_prob_holder;
     end
-    
+
+        
     %Initialize the important state variables
     MinesOpened = ones(1,numFirms*numIncMines);  %1 indicates not open. 2 indicates open. 
     sim_dperm = 3; 
@@ -56,7 +63,7 @@ for(sim=1:simNum3)
         highestNPV = 0; 
         bestMine = 0;
         bestCapex = 0;
-        for(mine=1:numIncMines)
+        for(mine=1:numIncMines) 
             %check to see if mine is already open. if so then skip. 
             if(MinesOpened((currentFirm-1)*numIncMines+mine) == 2)
                 continue;
@@ -64,23 +71,29 @@ for(sim=1:simNum3)
 
             %Calculate the expected NPV of opening this mine over 25 years over the 
             %possible demand fluctuations and main opening scenarios
-            [exp_price_path all_price_paths all_util_paths counter] = ...
-                futureExpectedPrice( MinesOpened, sim_dr, currentFirm, mine, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, sim_supshift, sim_dperm,...
+            [exp_MineNPV exp_FirmNPV exp_price_path all_price_paths all_util_paths counter] = ...
+                futureExpectedPrice2( MinesOpened, sim_dr, currentFirm, mine, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, sim_supshift, sim_dperm,...
                     t, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm, numYearsNPV, sim_orderOfFirms, ROWIncCurve);
 
-            [exp_NPV] = expectedNPV(exp_price_path, mine, currentIncCurve, sim_dr, numYearsNPV); 
-            exp_NPV_record(mine, currentFirm, t_yr, sim) = exp_NPV; 
+%             [exp_NPV] = expectedNPV(exp_price_path, mine, currentIncCurve, sim_dr, numYearsNPV); 
+            %if this mine doesn't have any production (indicated by a -1 in MineNPV returned, it should be skipped
+            if(exp_MineNPV ==-1)
+                continue; 
+            end
+            
+            exp_NPV_record_mine(mine, currentFirm, t_yr, sim) = exp_MineNPV; 
+            exp_NPV_record_firm(mine, currentFirm, t_yr, sim) = exp_FirmNPV; 
             
             %If the mine is NPV positive, see if the NPV is the most positive OR highest NPV/capex out of the potential incentive mines to open for this firm so far.
             %If so, record this mine as the mine to open
-            if (and(exp_NPV>highestNPV, exp_NPV>0))
-                highestNPV = exp_NPV;
+            if (and(exp_MineNPV>highestNPV, exp_MineNPV>0))
+                highestNPV = exp_MineNPV;
                 bestMine = mine; 
                 bestCapex = currentIncCurve(mine,4); 
-            elseif(and(exp_NPV==highestNPV, exp_NPV>0))
+            elseif(and(exp_MineNPV==highestNPV, exp_MineNPV>0))
                 %tiebreaking based on best NPV/capex ratio if the NPVs are the same and is not 0
                 if(currentIncCurve(mine,4)<bestCapex)
-                    highestNPV = exp_NPV;
+                    highestNPV = exp_MineNPV;
                     bestMine = mine; 
                     bestCapex = currentIncCurve(mine,4);
                 end
@@ -117,13 +130,16 @@ for(sim=1:simNum3)
         
             for(i=1:numFirms)
                 r_3 = rewards_3(i,2) - capex_3(i);
-                sim_Vt_3(t_yr,i,sim) = r_3;            
-                sim_V_3(i, sim) = sim_V_3(i, sim) + r_3*(1-sim_dr)^(t_yr-1);
+                sim_Vt_3(t_yr,i,sim) = r_3;
+                sim_ProfitCF_3(t_yr,i,sim) = rewards_3(i,2); 
+                sim_V_3(i, sim) = sim_V_3(i, sim) + r_3/(1+sim_dr)^(t_yr-1);
                 sim_Turnovers_3(t_yr,i,sim) = turnovers_3(i,2); 
                 sim_firm_Q_3(t_yr,i,sim) = firms_q_3(i,2);            
             end
-            
-            sim_Turnovers_3(t_yr,numFirms+1,sim) = sum(sim_Turnovers_3(t_yr,1:numFirms,sim));
+
+            %the numFirms+1 position is for the Rest of the World Turnover
+            %volume (for later graphing of the market share split in the world)
+            sim_Turnovers_3(t_yr,numFirms+1,sim) = sim_Prices_3(t_yr,sim)*sim_Q_3(t_yr,sim)*sim_CapUtil_3(t_yr, sim) - sum(sim_Turnovers_3(t_yr,1:numFirms,sim));
             
             %update the states for the next period
             [sim_dperm] = demandPermChange(sim_dperm, market_p_3(2));

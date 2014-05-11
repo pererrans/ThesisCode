@@ -12,7 +12,7 @@ elseif(length(exp_price_path) > numYearsNPV)
     exp_price_path = exp_price_path(1:numYearsNPV); 
 end
 
-%calculate cashflow vector for the 25 years    
+%calculate cashflow vector for the numYearsNPV years    
 prod = ones(1,numYearsNPV) * currentIncCurve(mine, 2); 
 opex = ones(1, numYearsNPV) * currentIncCurve(mine, 3);
 capex = currentIncCurve(mine, 4);

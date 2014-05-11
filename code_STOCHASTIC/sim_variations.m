@@ -118,7 +118,7 @@ for(sim=1:simNum)
             for(i=1:numFirms)
                 r_1 = rewards_1(i,2) - capex_1(i);
                 sim_Vt_1(t_yr,i,sim) = r_1;            
-                sim_V_1(i, sim) = sim_V_1(i, sim) + r_1*(1-sim_dr)^(t_yr-1);
+                sim_V_1(i, sim) = sim_V_1(i, sim) + r_1/(1+sim_dr)^(t_yr-1);
                 sim_firm_Q_1(i,t_yr,sim) = firms_q_1(i,2);            
             end
             

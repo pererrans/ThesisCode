@@ -1,4 +1,4 @@
-function [ sim_openings_1, sim_Prices_1, sim_Q_1,  sim_D_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_Turnovers_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1, sim_diag_names] = ...
+function [ sim_openings_1, sim_Prices_1, sim_Q_1,  sim_D_1, sim_firm_Q_1, sim_V_1, sim_Vt_1, sim_ProfitCF_1, sim_Turnovers_1, sim_CapUtil_1, sim_Faces_1, sim_diag_1, sim_diag_names] = ...
     simulation(Xa_1, Xb_1, Xc_1, simNum, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
     IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve)
 %Given the policy for each firm, simulate the actions
@@ -23,6 +23,7 @@ sim_CapUtil_1 = zeros(T_years, simNum);
 sim_Faces_1 = zeros(T_years, simNum); %when it crossed the cliff face of supply curve
 sim_V_1 = zeros(numFirms, simNum);
 sim_Vt_1 = zeros(T_years, numFirms, simNum);
+sim_ProfitCF_1 = zeros(T_years, numFirms, simNum);
 sim_Turnovers_1 = zeros(T_years, numFirms+1, simNum);
 sim_openings_1 = zeros(numIncMines, numFirms, simNum);
 sim_diag_1 = cell(T_years,simNum);    %cell array to store the diagnostics from each market clearing
@@ -35,6 +36,10 @@ for(sim=1:simNum)
     
     if(sim==1) 
         sim_D_prob=[0 1 0];
+    elseif(sim==2)
+        sim_D_prob=[1 0 0];
+    elseif(sim==3)
+        sim_D_prob=[0 0 1];
     else
         sim_D_prob = sim_D_prob_holder;
     end
@@ -127,12 +132,15 @@ for(sim=1:simNum)
             for(i=1:numFirms)
                 r_1 = rewards_1(i,2) - capex_1(i);
                 sim_Vt_1(t_yr,i,sim) = r_1;            
-                sim_V_1(i, sim) = sim_V_1(i, sim) + r_1*(1-sim_dr)^(t_yr-1);
+                sim_ProfitCF_1(t_yr,i,sim) = rewards_1(i,2); 
+                sim_V_1(i, sim) = sim_V_1(i, sim) + r_1/(1+sim_dr)^(t_yr-1);
                 sim_Turnovers_1(t_yr,i,sim) = turnovers_1(i,2); 
                 sim_firm_Q_1(t_yr,i,sim) = firms_q_1(i,2);            
             end
             
-            sim_Turnovers_1(t_yr,numFirms+1,sim) = sum(sim_Turnovers_1(t_yr,1:numFirms,sim)); 
+            %the numFirms+1 position is for the Rest of the World Turnover
+            %volume (for later graphing of the market share split in the world)
+            sim_Turnovers_1(t_yr,numFirms+1,sim) = sim_Prices_1(t_yr,sim)*sim_Q_1(t_yr,sim)*sim_CapUtil_1(t_yr, sim) - sum(sim_Turnovers_1(t_yr,1:numFirms,sim));
             
             %update the states for the next period
             [sim_dperm_1] = demandPermChange(sim_dperm_1, market_p_1(2));

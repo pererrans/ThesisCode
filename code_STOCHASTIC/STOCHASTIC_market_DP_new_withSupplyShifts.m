@@ -9,16 +9,30 @@ s = RandStream('mt19937ar','Seed',1);
 RandStream.setGlobalStream(s);
 
 % criteria2vary = 'el'; 
-criteria2vary = 'Dperturb';
+criteria2vary = 'supplyStr';
+
+%for demand
+dgrowth_list = cell(5,1); 
+dgrowth_list{1} = [0.01, 0.02]
+dgrowth_list{2} = [0.02, 0.01]
+dgrowth_list{3} = [0.02, 0.02]
+dgrowth_list{4} = [0.01, -0.01]
+dgrowth_list{5} = [-0.01, 0.01]
+
+%for ordering
+ordering_list = {'ABC', 'CBA', 'BAC', 'BCA', 'ACB', 'CAB'}; 
+
+%for supply structure
+supplymode_list = {'base','equalIncPrice','equalSupply','equalS_moreMajor','base_moreMajor','base_moreMajor_noIncVChange'}
 
 %for el
-% ordering_list = cell(4,1); 
-% ordering_list{1} = 0.5; 
-% ordering_list{2} = 1; 
-% ordering_list{3} = 2; 
-% ordering_list{4} = 0.75; 
-% ordering_list{5} = 0.6; 
-% ordering_list{6} = 0.1; 
+el_list = cell(4,1); 
+el_list{1} = 0.5; 
+el_list{2} = 1; 
+el_list{3} = 2; 
+el_list{4} = 0.75; 
+el_list{5} = 0.6; 
+el_list{6} = 0.1; 
 
 %for perturbation 
 perturb_list = cell(4,1); 
@@ -27,15 +41,22 @@ perturb_list{2} = 0.85;
 perturb_list{3} = 0.9; 
 perturb_list{4} = 0.95; 
 
+%for prob distribution
+pprob_list = cell(3,1); 
+pprob_list{1} = [0.2, 0.6, 0.2]; 
+pprob_list{2} = [0.1, 0.6, 0.3]; 
+pprob_list{3} = [0.3, 0.6, 0.1]; 
+pprob_list{4} = [0.3, 0.4, 0.3]; 
 
-for(list_num=1:4)
+for(order_num=1:2)
+for(list_num=3:3)
     
 %reset the random stream to start at the beginning for repeatability
 stream = RandStream.getGlobalStream;
 reset(stream);
 
 %naming for the output in terms of firm decision ordering
-ordering = 'ABC'; 
+ordering = ordering_list{order_num}; 
 
 switch ordering
     case 'ABC'
@@ -71,7 +92,7 @@ numIncMines = 3; %number of incentive mines per firm
 %Tinto one. 1 is for the real Rio Tinto one. -1 is for the real Rio Tinto one except the 
 %capex is reduced 10x so that shorter time horizon can still yield mine opening.
 % -2 is for the dummy one for testing purpose. -3 is for the Rio Tinto one with more aggregation (testing purpose) 
-SUPPLYCURVE_MODE = 0;
+SUPPLYCURVE_MODE = supplymode_list{list_num};
 
 %ROWINCCURVE_MODE: 1 is for ROW Incentive curve being mines that will
 %always operate. 2 is for ROW curve with mines that have specified opex
@@ -149,18 +170,19 @@ el = 0.5;
 %demand level and growth
 %D_0 = 1100;   %base demand
 D_0 = 2800;   %base demand
-D_growth = 0.01;   %demand growth rate
+%D_growth = dgrowth_list{list_num};   %demand growth rate
+D_growth = [0.01, 0.01];
 
 %populate the demand series 
 Demand = ones(1,T)*D_0;
 Demand_yr = ones(1,T_years)*D_0; 
-for t_yr=2:T_years
-    Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1+D_growth);
+for t_yr=2:14
+    Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1+D_growth(1));
 end
 
-% for t_yr=15:T_years
-%     Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1-D_growth);
-% end
+for t_yr=15:T_years
+    Demand_yr(t_yr) = Demand_yr(t_yr-1)*(1+D_growth(2));
+end
 
 
 if(T==T_years)
@@ -176,8 +198,9 @@ else
 end
 
 %demand perturbation range and prob
-D_fluct = perturb_list{list_num};  %TODO: THIS CANNOT BE ZERO AT THE MOMENT. NEED TO SAFETY CHECK
-D_prob = [0.1,0.8,0.1];
+% D_fluct = perturb_list{list_num};  %TODO: THIS CANNOT BE ZERO AT THE MOMENT. NEED TO SAFETY CHECK
+D_fluct = 0.95;
+D_prob = [0.1, 0.8, 0.1];
 
 %the change associated with a state variable on whether demand has been permanently changed due to a
 %high demand/low demand event (demand never fully recovers from large
@@ -188,19 +211,84 @@ DPERM_change = 0.05; % +5% change in non-shocked demand if DPERM is 1, and 10% i
 %%
 %Settings for new mines belonging to the big 3 players, ie incentive curves. The columns are ownerID, capacity, opex, and
 %capex respectively
-if(SUPPLYCURVE_MODE==0)
+if(strcmp(SUPPLYCURVE_MODE,'base'))
     IncentiveCurveA = [1	140	26	6956
-                        1	97	30	13119
-                        1	107	29	12853];
+                        1	107	29	12853
+                        1	97	30	13119];
 
-    IncentiveCurveB = [2	104	33	12349
-                        2	229	34	35345
-                        2	113	32	13233];
+    IncentiveCurveB = [2	113	32	13233
+                        2	104	33	12349
+                        2	229	34	35345];
 
     IncentiveCurveC = [3	178	33	21474
                         3	94	35	7444
                         3	90	40	15603];
-    
+
+elseif(strcmp(SUPPLYCURVE_MODE,'equalIncPrice'))
+    IncentiveCurveA = [1	140	26	6956
+                        1	107	33	8473
+                        1	97	40	13119];
+
+    IncentiveCurveB = [2	113	26	5614
+                        2	104	33	8236
+                        2	229	40	30972];
+
+    IncentiveCurveC = [3	178	26	8844
+                        3	94	33	7444
+                        3	90	40	12172];
+
+elseif(strcmp(SUPPLYCURVE_MODE,'equalSupply'))
+    IncentiveCurveA = [1	185	26	9191.9
+                        1	101	33	7998.3
+                        1	98	40	13254.2];
+
+    IncentiveCurveB = [2	185	26	9191.9
+                        2	101	33	7998.3
+                        2	98	40	13254.2];
+
+    IncentiveCurveC = [3	185	26	9191.9
+                        3	101	33	7998.3
+                        3	98	40	13254.2];    
+                    
+elseif(strcmp(SUPPLYCURVE_MODE,'equalS_moreMajor'))
+    IncentiveCurveA = [1	261.6	26	12999.9
+                        1	142.8	33	11311.9
+                        1	138.6	40	18745.3];
+
+    IncentiveCurveB = [2	261.6	26	12999.9
+                        2	142.8	33	11311.9
+                        2	138.6	40	18745.3];
+
+    IncentiveCurveC = [3	261.6	26	12999.9
+                        3	142.8	33	11311.9
+                        3	138.6	40	18745.3];  
+                    
+elseif(strcmp(SUPPLYCURVE_MODE,'base_moreMajor'))
+    IncentiveCurveA = [1	198.0	26	9837.8
+                        1	151.3	29	18177.8
+                        1	137.2	30	18554.0];
+
+    IncentiveCurveB = [2	159.8	32	18715.2
+                        2	147.1	33	17465.0
+                        2	323.9	34	49987.9];
+
+    IncentiveCurveC = [3	251.7	33	30370.4
+                        3	132.9	35	10527.9
+                        3	127.3	40	22067.1];  
+
+elseif(strcmp(SUPPLYCURVE_MODE,'base_moreMajor_noIncVChange'))
+    IncentiveCurveA = [1	140.0	26	6956
+                        1	107.0	29	12853
+                        1	97.0	30	13119];
+
+    IncentiveCurveB = [2	113.0	32	13233
+                        2	104.0	33	12349
+                        2	229.0	34	35345];
+
+    IncentiveCurveC = [3	178.0	33	21474
+                        3	94.0	35	7444
+                        3	90.0	40	15603];  
+                    
 elseif(SUPPLYCURVE_MODE==1)
     IncentiveCurveA = [1	70	43	5600
                         1	50	47	10247
@@ -308,7 +396,7 @@ end
 % doesn't need to be resized and slow down the code in findprice_new
 incSupLength = size(TotalIncentiveCurve,1) + size(ROWIncCurve{1},1) + size(ROWIncCurve{2},1) + size(ROWIncCurve{3},1); 
 SupplyCurve = zeros(95+incSupLength,3,T);
-if(SUPPLYCURVE_MODE==0)
+if(or(strcmp(SUPPLYCURVE_MODE,'base'), strcmp(SUPPLYCURVE_MODE,'equalIncPrice')))
     %fill the owner of the placeholders for the potential incentive mines with 
     % 4 to prevent index 0 in a later part of the program for a mine not opened
     SupplyCurve(1:incSupLength,1,1) = 4; 
@@ -409,6 +497,310 @@ if(SUPPLYCURVE_MODE==0)
                         4	7	167.6
                         4	7	168.6];
     
+elseif(strcmp(SUPPLYCURVE_MODE,'equalSupply'))
+    %fill the owner of the placeholders for the potential incentive mines with 
+    % 4 to prevent index 0 in a later part of the program for a mine not opened
+    SupplyCurve(1:incSupLength,1,1) = 4; 
+    %inflated highest price Q to never run out of supply
+    SupplyCurve(incSupLength+1:end,:,1) = [4	32	9.7
+4	19	15.6
+4	32	21.8
+1	95	24.5
+2	95	24.5
+3	95	24.5
+4	30	24.9
+1	116	26.4
+2	116	26.4
+3	116	26.4
+1	236	30
+2	236	30
+3	236	30
+4	67	30.4
+4	97	30.6
+4	73	34.7
+1	19	35.2
+2	19	35.2
+3	19	35.2
+4	95	37
+4	140	38.5
+4	76	39.5
+4	60	41.2
+4	41	41.4
+4	179	41.4
+4	57	42.8
+1	44.3	45.3
+2	44.3	45.3
+3	44.3	45.3
+1	12	46
+2	12	46
+3	12	46
+4	164	46.9
+4	53	47.2
+4	30	48
+4	33	49
+4	59	52.9
+4	66	52.9
+4	34	53.5
+4	38	56.3
+4	46	56.7
+4	34	57.9
+1	19	60.7
+2	19	60.7
+3	19	60.7
+4	27	61.6
+4	31	62.5
+4	38	66.2
+4	54	66.2
+4	22	70.1
+4	36	72
+4	21	73
+4	19	73.8
+4	10	77.5
+4	19	79.4
+4	24	80.2
+4	26	83.2
+4	16	85.6
+4	42	92.2
+4	11	97.1
+4	8	97.2
+4	4	104.3
+4	4	105.9
+4	4	107.5
+4	2	112.7
+4	5	126
+4	6	130.2
+4	7	138.7
+4	9	143.2
+4	8	144.8
+4	8	146.1
+4	6	147.4
+4	8	150.2
+4	8	150.3
+4	8	150.3
+4	8	150.7
+4	8	152.3
+4	8	152.8
+4	8	153
+4	8	153.2
+4	8	153.2
+4	8	154.4
+4	7	155.2
+4	8	155.6
+4	9	155.7
+4	8	156.1
+4	8	157.2
+4	8	157.6
+4	8	157.7
+4	8	158.3
+4	8	159.8
+4	8	160
+4	8	162.8
+4	7	167.6
+4	7	168.6];
+
+elseif(strcmp(SUPPLYCURVE_MODE,'equalS_moreMajor'))
+    %fill the owner of the placeholders for the potential incentive mines with 
+    % 4 to prevent index 0 in a later part of the program for a mine not opened
+    SupplyCurve(1:incSupLength,1,1) = 4; 
+    %inflated highest price Q to never run out of supply
+    SupplyCurve(incSupLength+1:end,:,1) = [4	22.2	9.7
+4	13.2	15.6
+4	22.2	21.8
+1	134.4	24.5
+2	134.4	24.5
+3	134.4	24.5
+4	20.8	24.9
+1	164.1	26.4
+2	164.1	26.4
+3	164.1	26.4
+1	333.8	30
+2	333.8	30
+3	333.8	30
+4	46.5	30.4
+4	67.4	30.6
+4	50.7	34.7
+1	26.9	35.2
+2	26.9	35.2
+3	26.9	35.2
+4	66.0	37
+4	97.3	38.5
+4	52.8	39.5
+4	41.7	41.2
+4	28.5	41.4
+4	124.4	41.4
+4	39.6	42.8
+1	62.7	45.3
+2	62.7	45.3
+3	62.7	45.3
+1	17.0	46
+2	17.0	46
+3	17.0	46
+4	113.9	46.9
+4	36.8	47.2
+4	20.8	48
+4	22.9	49
+4	41.0	52.9
+4	45.9	52.9
+4	23.6	53.5
+4	26.4	56.3
+4	32.0	56.7
+4	23.6	57.9
+1	26.9	60.7
+2	26.9	60.7
+3	26.9	60.7
+4	18.8	61.6
+4	21.5	62.5
+4	26.4	66.2
+4	37.5	66.2
+4	15.3	70.1
+4	25.0	72
+4	14.6	73
+4	13.2	73.8
+4	6.9	77.5
+4	13.2	79.4
+4	16.7	80.2
+4	18.1	83.2
+4	11.1	85.6
+4	29.2	92.2
+4	7.6	97.1
+4	5.6	97.2
+4	2.8	104.3
+4	2.8	105.9
+4	2.8	107.5
+4	1.4	112.7
+4	3.5	126
+4	4.2	130.2
+4	4.9	138.7
+4	6.3	143.2
+4	5.6	144.8
+4	5.6	146.1
+4	4.2	147.4
+4	5.6	150.2
+4	5.6	150.3
+4	5.6	150.3
+4	5.6	150.7
+4	5.6	152.3
+4	5.6	152.8
+4	5.6	153
+4	5.6	153.2
+4	5.6	153.2
+4	5.6	154.4
+4	4.9	155.2
+4	5.6	155.6
+4	6.3	155.7
+4	5.6	156.1
+4	5.6	157.2
+4	5.6	157.6
+4	5.6	157.7
+4	5.6	158.3
+4	5.6	159.8
+4	5.6	160
+4	5.6	162.8
+4	4.9	167.6
+4	4.9	168.6];
+
+elseif(or(strcmp(SUPPLYCURVE_MODE,'base_moreMajor'),strcmp(SUPPLYCURVE_MODE,'base_moreMajor_noIncVChange')))
+    %fill the owner of the placeholders for the potential incentive mines with 
+    % 4 to prevent index 0 in a later part of the program for a mine not opened
+    SupplyCurve(1:incSupLength,1,1) = 4; 
+    %inflated highest price Q to never run out of supply
+    SupplyCurve(incSupLength+1:end,:,1) = [4	22.2	9.7
+4	13.2	15.6
+4	22.2	21.8
+3	7.1	24.1
+3	134.4	24.5
+4	20.8	24.9
+2	222.0	25.5
+3	25.5	26.2
+3	138.6	26.4
+3	8.5	27.4
+3	69.3	29.6
+2	70.7	29.7
+2	108.9	29.8
+2	125.9	29.9
+3	264.5	30
+1	864.1	30.2
+2	75.0	30.2
+4	46.5	30.4
+4	67.4	30.6
+3	12.7	33.8
+4	50.7	34.7
+3	12.7	35.2
+4	66.0	37
+4	97.3	38.5
+4	52.8	39.5
+1	33.9	40.3
+4	41.7	41.2
+4	28.5	41.4
+4	124.4	41.4
+3	5.7	42
+4	39.6	42.8
+3	60.8	45.3
+3	17.0	46
+4	113.9	46.9
+4	36.8	47.2
+4	20.8	48
+4	22.9	49
+1	12.7	51.1
+4	41.0	52.9
+4	45.9	52.9
+4	23.6	53.5
+4	26.4	56.3
+4	32.0	56.7
+4	23.6	57.9
+3	26.9	60.7
+4	18.8	61.6
+4	21.5	62.5
+4	26.4	66.2
+4	37.5	66.2
+4	15.3	70.1
+4	25.0	72
+4	14.6	73
+4	13.2	73.8
+4	6.9	77.5
+4	13.2	79.4
+4	16.7	80.2
+4	18.1	83.2
+4	11.1	85.6
+4	29.2	92.2
+4	7.6	97.1
+4	5.6	97.2
+4	2.8	104.3
+4	2.8	105.9
+4	2.8	107.5
+4	1.4	112.7
+4	3.5	126
+4	4.2	130.2
+4	4.9	138.7
+4	6.3	143.2
+4	5.6	144.8
+4	5.6	146.1
+4	4.2	147.4
+4	5.6	150.2
+4	5.6	150.3
+4	5.6	150.3
+4	5.6	150.7
+4	5.6	152.3
+4	5.6	152.8
+4	5.6	153
+4	5.6	153.2
+4	5.6	153.2
+4	5.6	154.4
+4	4.9	155.2
+4	5.6	155.6
+4	6.3	155.7
+4	5.6	156.1
+4	5.6	157.2
+4	5.6	157.6
+4	5.6	157.7
+4	5.6	158.3
+4	5.6	159.8
+4	5.6	160
+4	5.6	162.8
+4	4.9	167.6
+4	4.9	168.6];
+
+
 elseif(SUPPLYCURVE_MODE==1)
     %fill the owner of the placeholders for the potential incentive mines with 
     % 4 to prevent index 0 in a later part of the program for a mine not opened
@@ -936,6 +1328,21 @@ reset(stream);
     T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm, ROWIncCurve);
 
 
+
+
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%POSITIVE FIRM NPV CRITERIA OPTIMAL DECISION CALC AND SIMULATION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+simNum4 = simNum; 
+
+stream = RandStream.getGlobalStream;
+reset(stream);
+[sim_openings_4, sim_Prices_4, sim_Q_4, sim_D_4, sim_firm_Q_4, sim_V_4, sim_Vt_4, sim_Turnovers_4, sim_CapUtil_4, sim_Faces_4, sim_diag_4] = ...
+    firm_NPV_DPandSim(simNum4, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change, ...
+    T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, TotalIncCurve_byFirm, ROWIncCurve);
+
+
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%SIMULATION: What happens if one or more firms use firm-NPV maximizing
@@ -957,22 +1364,23 @@ fig = figure(1);
 clf('reset');
 set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.4]); 
 time = 1:T_years;
-plot(time, sim_Prices_1(:,1), time, sim_Prices_2(:,1), time, sim_Prices_3(:,1), time, sim_Prices_mono(:,1),'LineWidth',2);
+plot(time, sim_Prices_1(:,1), time, sim_Prices_2(:,1), time, sim_Prices_3(:,1), time, sim_Prices_4(:,1), time, sim_Prices_mono(:,1),'LineWidth',2);
 hold on
-plot(time, max(sim_Prices_1,[],2), '--',time, max(sim_Prices_2,[],2), '--',time, max(sim_Prices_3,[],2),'--', time, max(sim_Prices_mono,[],2),'--', 'LineWidth',1);
+plot(time, max(sim_Prices_1,[],2), '--',time, max(sim_Prices_2,[],2), '--',time, max(sim_Prices_3,[],2), '--',time, max(sim_Prices_4,[],2), '--', time, max(sim_Prices_mono,[],2),'--', 'LineWidth',1);
 hold on
-plot(time, min(sim_Prices_1,[],2), '--',time, min(sim_Prices_2,[],2), '--',time, min(sim_Prices_3,[],2), '--',time, min(sim_Prices_mono,[],2),'--', 'LineWidth',1);
+plot(time, min(sim_Prices_1,[],2), '--',time, min(sim_Prices_2,[],2), '--',time, min(sim_Prices_3,[],2), '--',time, min(sim_Prices_4,[],2), '--',time, min(sim_Prices_mono,[],2),'--', 'LineWidth',1);
 hold off
-p_min = min(min(min([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_mono])))-5;
-p_max = max(max(max([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_mono])))+5;
+p_min = min(min(min([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_4 sim_Prices_mono])))-5;
+p_max = max(max(max([sim_Prices_1 sim_Prices_2 sim_Prices_3 sim_Prices_4 sim_Prices_mono])))+5;
 axis([min(time) 30 p_min p_max])
 fprintf('Price path of different policies, order(%s)\n', ordering);
 sim_Prices_1
 sim_Prices_2
 sim_Prices_3
+sim_Prices_4
 sim_Prices_mono
 
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'positive-firm-NPV policy', 'cartel policy', 'Location', 'Best');
 set(leg1, 'Box', 'off', 'Color', 'none');
 
 
@@ -987,14 +1395,14 @@ fig = figure(2);
 clf('reset');
 set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.4]); 
 
-plot(time, sim_Q_1(:,1), time, sim_Q_2(:,1), time, sim_Q_3(:,1), time, sim_Q_mono(:,1), time, sim_D_1(:,1), 'LineWidth',2);
+plot(time, sim_Q_1(:,1), time, sim_Q_2(:,1), time, sim_Q_3(:,1), time, sim_Q_4(:,1), time, sim_Q_mono(:,1), time, sim_D_1(:,1), 'LineWidth',2);
 hold on
-plot(time, max(sim_Q_1,[],2), '--',time, max(sim_Q_2,[],2), '--',time, max(sim_Q_3,[],2),'--', time, max(sim_Q_mono,[],2),'--', time, max(sim_D_1,[],2),'--', 'LineWidth',1);
+plot(time, max(sim_Q_1,[],2), '--',time, max(sim_Q_2,[],2), '--',time, max(sim_Q_3,[],2),'--', time, max(sim_Q_4,[],2),'--', time, max(sim_Q_mono,[],2),'--', time, max(sim_D_1,[],2),'--', 'LineWidth',1);
 hold on
-plot(time, min(sim_Q_1,[],2), '--',time, min(sim_Q_2,[],2), '--',time, min(sim_Q_3,[],2), '--',time, min(sim_Q_mono,[],2),'--', time, min(sim_D_1,[],2),'--','LineWidth',1);
+plot(time, min(sim_Q_1,[],2), '--',time, min(sim_Q_2,[],2), '--',time, min(sim_Q_3,[],2), '--', time, min(sim_Q_4,[],2), '--', time, min(sim_Q_mono,[],2),'--', time, min(sim_D_1,[],2),'--','LineWidth',1);
 hold off
-q_min = min(min(min([sim_Q_1 sim_Q_2 sim_Q_3 sim_Q_mono sim_D_1])))-50;
-q_max = max(max(max([sim_Q_1 sim_Q_2 sim_Q_3 sim_Q_mono sim_D_1])))+50;
+q_min = min(min(min([sim_Q_1 sim_Q_2 sim_Q_3 sim_Q_4 sim_Q_mono sim_D_1])))-50;
+q_max = max(max(max([sim_Q_1 sim_Q_2 sim_Q_3 sim_Q_4 sim_Q_mono sim_D_1])))+50;
 
 axis([min(time) 30 q_min q_max])
 
@@ -1002,9 +1410,10 @@ fprintf('Quantity path of different policies: dummy, firm_NPV with game, postive
 sim_Q_1
 sim_Q_2
 sim_Q_3
+sim_Q_4
 sim_Q_mono
 
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'Market NPV optimal policy', 'Underlying demand', 'Location', 'Best');
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'positive-firm-NPV policy', 'cartel policy', 'Location', 'Best');
 set(leg1, 'Box', 'off');
 set(leg1, 'Color', 'none');
 
@@ -1023,12 +1432,12 @@ saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_production path.
 sim_open_1 = zeros(T_years, 4, numFirms); 
 sim_open_2 = zeros(T_years, 4, numFirms); 
 sim_open_3 = zeros(T_years, 4, numFirms); 
+sim_open_4 = zeros(T_years, 4, numFirms); 
 sim_open_mono = zeros(T_years, 4, numFirms); 
 
 for(c=1:numFirms)
     currentIncCurve = TotalIncCurve_byFirm{c};
     for(r=1:numIncMines)
-        t = sim_openings_1(r,c,1);
         prod = currentIncCurve(r,2); 
         opex = currentIncCurve(r,3);
         capex = currentIncCurve(r,4);
@@ -1036,6 +1445,8 @@ for(c=1:numFirms)
         if(prod~=0)
             capexunit = capex / prod; 
         end
+        
+        t = sim_openings_1(r,c,1);
         if(t~=0)
             sim_open_1(t,1,c) = prod; %production
             sim_open_1(t,2,c) =  opex; %opex
@@ -1059,6 +1470,14 @@ for(c=1:numFirms)
             sim_open_3(t,4,c) = capexunit; %capex / unit production
         end
         
+        t = sim_openings_4(r,c,1);
+        if(t~=0)
+            sim_open_4(t,1,c) = prod; %production
+            sim_open_4(t,2,c) = opex; %opex
+            sim_open_4(t,3,c) = capex; %capex
+            sim_open_4(t,4,c) = capexunit; %capex / unit production
+        end
+        
         t = sim_openings_mono(r,c,1);
         if(t~=0)
             sim_open_mono(t,1,c) = prod; %production
@@ -1074,13 +1493,13 @@ end
 %plot the new openings - quantity versus overall market quantity
 fig = figure(3);
 clf('reset');
-set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.8]); 
-colormap(lines(10));
+set(fig, 'units','normalized','position',[0.1 0.1 0.5 1]); 
+colormap(lines(7));
 
 stackedbar = @(x, A) bar(x, A, 'stack');
 prettyline = @(x, y) plot(x, y, 'k', 'LineWidth', 1);
 
-subplot(4,1,1)
+subplot(5,1,1)
 
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_1(:,1,:)), time, sim_Q_1(:,1), stackedbar, prettyline);
 
@@ -1096,7 +1515,7 @@ set(ax(2), 'XTickLabel','','XAxisLocation','Top')
 title('No new opening');
 
 set(ax(1), 'YTick', 0:100:(max(TotalIncentiveCurve(:,2))*2));
-set(ax(2), 'YTick', 0:200:q_max);
+set(ax(2), 'YTick', 0:500:q_max);
 
 ylabel(ax(1), 'New capacity');
 ylabel(ax(2), 'Total quantity');
@@ -1106,7 +1525,7 @@ set(l,'PlotBoxAspectRatioMode','manual');
 set(l,'PlotBoxAspectRatio',[1 0.35 1]);
 set(l, 'Location', 'Best');
 
-subplot(4,1,2)
+subplot(5,1,2)
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_2(:,1,:)), time, sim_Q_2(:,1), stackedbar, prettyline);
 
 set(h1, 'EdgeColor','none'); 
@@ -1122,11 +1541,11 @@ set(ax(2), 'XTickLabel','','XAxisLocation','Top')
 title('Best firm-NPV policy');
 
 set(ax(1), 'YTick', 0:100:(max(TotalIncentiveCurve(:,2))*2)); 
-set(ax(2), 'YTick', 0:200:q_max);
+set(ax(2), 'YTick', 0:500:q_max);
 ylabel(ax(1), 'New capacity');
 ylabel(ax(2), 'Total quantity');
 
-subplot(4,1,3)
+subplot(5,1,3)
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_3(:,1,:)), time, sim_Q_3(:,1), stackedbar, prettyline);
 
 set(h1, 'EdgeColor','none'); 
@@ -1141,12 +1560,33 @@ set(ax(2),'Box','off')
 set(ax(2), 'XTickLabel','','XAxisLocation','Top') 
 
 set(ax(1), 'YTick', 0:100:(max(TotalIncentiveCurve(:,2))*2)); 
-set(ax(2), 'YTick', 0:200:q_max);
+set(ax(2), 'YTick', 0:500:q_max);
 ylabel(ax(1), 'New capacity');
 ylabel(ax(2), 'Total quantity');
 title('Positive mine-NPV policy');
 
-subplot(4,1,4)
+subplot(5,1,4)
+[ax, h1, h2] = plotyy(time, squeeze(sim_open_4(:,1,:)), time, sim_Q_4(:,1), stackedbar, prettyline);
+
+set(h1, 'EdgeColor','none'); 
+set(ax(1), 'XLim', [0 T_years]);
+set(ax(2), 'XLim', [0 T_years]);
+set(ax(1), 'YLim',[0 max(TotalIncentiveCurve(:,2))*2]);
+set(ax(2), 'YLim',[q_min q_max]);
+
+linkaxes(ax, 'x'); 
+set(ax(1),'Box','off')
+set(ax(2),'Box','off')
+set(ax(2), 'XTickLabel','','XAxisLocation','Top') 
+
+set(ax(1), 'YTick', 0:100:(max(TotalIncentiveCurve(:,2))*2)); 
+set(ax(2), 'YTick', 0:500:q_max);
+ylabel(ax(1), 'New capacity');
+ylabel(ax(2), 'Total quantity');
+title('Positive firm-NPV policy');
+
+
+subplot(5,1,5)
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_mono(:,1,:)), time, sim_Q_mono(:,1), stackedbar, prettyline);
 
 set(h1, 'EdgeColor','none'); 
@@ -1161,11 +1601,11 @@ set(ax(2),'Box','off')
 set(ax(2), 'XTickLabel','','XAxisLocation','Top') 
 
 set(ax(1), 'YTick', 0:100:(max(TotalIncentiveCurve(:,2))*2)); 
-set(ax(2), 'YTick', 0:200:q_max);
+set(ax(2), 'YTick', 0:500:q_max);
 ylabel(ax(1), 'New capacity');
 ylabel(ax(2), 'Total quantity');
 xlabel('Year');
-title('Optimal market-NPV policy');
+title('cartel policy');
 
 annotation('textbox', [0 0.9 1 0.1], ...
 'String', ['New Mine Openings - Capacity Added vs Market Quantity (' ordering ')'], ...
@@ -1179,12 +1619,12 @@ saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_new mines openin
 %%%%%
 fig = figure(8);
 clf('reset');
-set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.8]); 
-colormap(lines(10));
+set(fig, 'units','normalized','position',[0.1 0.1 0.5 1]); 
+colormap(lines(7));
 
 groupedbar = @(x, A) bar(x, A, 'grouped', 'EdgeColor','none');
 
-subplot(4,1,1)
+subplot(5,1,1)
 
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_1(:,2,:)), time, sim_Prices_1(:,1), groupedbar, prettyline);
 
@@ -1211,7 +1651,7 @@ set(l, 'Location', 'Best');
 title('No new opening');
 
 
-subplot(4,1,2)
+subplot(5,1,2)
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_2(:,2,:)), time, sim_Prices_2(:,1), groupedbar, prettyline);
 
 set(ax(1), 'XLim', [0 T_years]);
@@ -1231,7 +1671,7 @@ ylabel(ax(1), 'Opex');
 ylabel(ax(2), 'Price');
 title('Best firm-NPV policy');
 
-subplot(4,1,3)
+subplot(5,1,3)
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_3(:,2,:)), time, sim_Prices_3(:,1), groupedbar, prettyline);
 
 set(ax(1), 'XLim', [0 T_years]);
@@ -1251,7 +1691,28 @@ ylabel(ax(1), 'Opex');
 ylabel(ax(2), 'Price');
 title('Positive mine-NPV policy');
 
-subplot(4,1,4)
+subplot(5,1,4)
+[ax, h1, h2] = plotyy(time, squeeze(sim_open_4(:,2,:)), time, sim_Prices_4(:,1), groupedbar, prettyline);
+
+set(ax(1), 'XLim', [0 T_years]);
+set(ax(2), 'XLim', [0 T_years]);
+set(ax(1), 'YLim',[min(TotalIncentiveCurve(:,3))-5 p_max+5]);
+set(ax(2), 'YLim',[min(TotalIncentiveCurve(:,3))-5 p_max+5]);
+
+linkaxes(ax, 'x'); 
+set(ax(1),'Box','off')
+set(ax(2),'Box','off')
+set(ax(2), 'XTickLabel','','XAxisLocation','Top') 
+
+set(ax(1), 'YTick', 0:10:p_max);
+set(ax(2), 'YTick', 0:10:p_max);
+
+ylabel(ax(1), 'Opex');
+ylabel(ax(2), 'Price');
+title('Positive firm-NPV policy');
+
+
+subplot(5,1,5)
 [ax, h1, h2] = plotyy(time, squeeze(sim_open_mono(:,2,:)), time, sim_Prices_mono(:,1), groupedbar, prettyline);
 
 set(ax(1), 'XLim', [0 T_years]);
@@ -1283,25 +1744,27 @@ saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_new mines openin
 %display summary of new openings over time
 display('policy 1 openings (row = mine #, column = firm #)');
 sim_openings_1(:,:,1)
-display(' openings (row = mine #, column = firm #)');
+display('optimal firm NPV policy openings (row = mine #, column = firm #)');
 sim_openings_2(:,:,1)
-display('firm positive NPV policy openings (row = mine #, column = firm #)');
+display('mine positive NPV policy openings (row = mine #, column = firm #)');
 sim_openings_3(:,:,1)
-display('market optimal openings (row = mine #, column = firm #)');
+display('firm positive NPV policy openings (row = mine #, column = firm #)');
+sim_openings_4(:,:,1)
+display('cartel policy openings (row = mine #, column = firm #)');
 sim_openings_mono(:,:,1)
 
 
 %compare the value (NPV) of the firms in the two scenarios
 fig = figure(4);
 clf('reset');
-colormap(lines(10));
+colormap(lines(7));
 
-bars = [sim_V_1(:,1) sim_V_2(:,1) sim_V_3(:,1) sim_V_mono(:,1)];
-errors_high = [max(sim_V_1,[],2) max(sim_V_2,[],2) max(sim_V_3,[],2) max(sim_V_mono,[],2)] - bars; 
-errors_low = bars - [min(sim_V_1,[],2) min(sim_V_2,[],2) min(sim_V_3,[],2) min(sim_V_mono,[],2)]; 
+bars = [sim_V_1(:,1) sim_V_2(:,1) sim_V_3(:,1) sim_V_4(:,1) sim_V_mono(:,1)];
+errors_high = [max(sim_V_1,[],2) max(sim_V_2,[],2) max(sim_V_3,[],2) max(sim_V_4,[],2) max(sim_V_mono,[],2)] - bars; 
+errors_low = bars - [min(sim_V_1,[],2) min(sim_V_2,[],2) min(sim_V_3,[],2) min(sim_V_4,[],2) min(sim_V_mono,[],2)]; 
 groupnames = {'Firm A'; 'Firm B'; 'Firm C'};
 bw_title = ['NPV Comparison (' ordering ')'];
-bw_legend = {'no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'Optimal market NPV policy'};
+bw_legend = {'no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'positive-firm-NPV policy', 'cartel policy'};
 
 handles = barweb(bars, errors_high, errors_low, [], groupnames, bw_title, [], 'NPV', lines(10), 'y', bw_legend, 2, 'grid');
 set(handles.bars, 'EdgeColor','none'); 
@@ -1313,9 +1776,11 @@ fprintf('Total NPV of the three players under base policy is %d \n', sum(sim_V_1
 sim_V_1
 fprintf('Total NPV of the three players under the firm-optimal policy is %d \n', sum(sim_V_2));
 sim_V_2
-fprintf('Total NPV of the three players under mine-optimal policy is %d \n', sum(sim_V_3));
+fprintf('Total NPV of the three players under positive-mine-NPV policy is %d \n', sum(sim_V_3));
 sim_V_3
-fprintf('Total NPV of the three players under market optimal policy is %d \n', sum(sim_V_mono));
+fprintf('Total NPV of the three players under positive-firm-NPV policy is %d \n', sum(sim_V_3));
+sim_V_4
+fprintf('Total NPV of the three players under the cartel policy is %d \n', sum(sim_V_mono));
 sim_V_mono
 
 %%
@@ -1347,10 +1812,10 @@ firmNames = ['A' 'B' 'C' 'D'];
 for varywho = 1:numFirms
     stream = RandStream.getGlobalStream;
     reset(stream);
-    [sim_openings_4, sim_Prices_4, sim_Q_4, sim_firm_Q_4, sim_V_4, sim_Vt_4, sim_CapUtil_4, sim_Faces_4, sim_diag_4] ...
+    [sim_openings_rand, sim_Prices_rand, sim_Q_rand, sim_firm_Q_rand, sim_V_rand, sim_Vt_rand, sim_CapUtil_rand, sim_Faces_rand, sim_diag_rand] ...
         = sim_variations(varywho, Xa_2, Xb_2, Xc_2, numOtherPolicies, sim_dr, sim_orderOfFirms, sim_D_fluct, sim_D_prob, sim_Demand, sim_DPERM_change,...
         IncentiveCurveA, IncentiveCurveB, IncentiveCurveC, T, decisions_in_dt, numFirms, numIncMines, el, SupplyCurve, rich_a, D_0, TotalIncentiveCurve, ROWIncCurve);
-    sim_openings_4;
+    sim_openings_rand;
 
     %Graph the different NPV 
     %overall NPV bar graph
@@ -1363,7 +1828,7 @@ for varywho = 1:numFirms
                          'EdgeColor','none');
     hold on
     width2 = width1/2;
-    bar(2:numOtherPolicies+1, sim_V_4(1,:), width2,'FaceColor',[0,0.7,0.7],...
+    bar(2:numOtherPolicies+1, sim_V_rand(1,:), width2,'FaceColor',[0,0.7,0.7],...
                          'EdgeColor',[0,0.7,0.7]);
     %legend('Optimal Policy for A', 'Other Policies for A');
     title('NPV Comparison for A');
@@ -1377,7 +1842,7 @@ for varywho = 1:numFirms
                          'EdgeColor','none');
     hold on
     width2 = width1/2;
-    bar(2:numOtherPolicies+1, sim_V_4(2,:), width2,'FaceColor',[0,0.7,0.7],...
+    bar(2:numOtherPolicies+1, sim_V_rand(2,:), width2,'FaceColor',[0,0.7,0.7],...
                          'EdgeColor',[0,0.7,0.7]);
     %legend('Optimal Policy for A', 'Other Policies for A');
     title('NPV Comparison for B');
@@ -1391,7 +1856,7 @@ for varywho = 1:numFirms
                          'EdgeColor','none');
     hold on
     width2 = width1/2;
-    bar(2:numOtherPolicies+1, sim_V_4(3,:), width2,'FaceColor',[0,0.7,0.7],...
+    bar(2:numOtherPolicies+1, sim_V_rand(3,:), width2,'FaceColor',[0,0.7,0.7],...
                          'EdgeColor',[0,0.7,0.7]);
     %legend('Optimal Policy for A', 'Other Policies for A');
     title('NPV Comparison for C');
@@ -1413,11 +1878,11 @@ clf('reset');
 set(fig, 'units','normalized','position',[0.1 0.1 0.5 0.4]); 
 time = 1:T_years;
 
-plot(time, sim_Prices_1(:,1).*sim_Q_1(:,1), time, sim_Prices_2(:,1).*sim_Q_2(:,1), time, sim_Prices_3(:,1).*sim_Q_3(:,1), time, sim_Prices_mono(:,1).*sim_Q_mono(:,1),'LineWidth',2);
+plot(time, sim_Prices_1(:,1).*sim_Q_1(:,1), time, sim_Prices_2(:,1).*sim_Q_2(:,1), time, sim_Prices_3(:,1).*sim_Q_3(:,1), time, sim_Prices_4(:,1).*sim_Q_4(:,1), time, sim_Prices_mono(:,1).*sim_Q_mono(:,1),'LineWidth',2);
 hold on
-plot(time, max(sim_Prices_1.*sim_Q_1,[],2), '--',time, max(sim_Prices_2.*sim_Q_2,[],2), '--',time, max(sim_Prices_3.*sim_Q_3,[],2),'--', time, max(sim_Prices_mono.*sim_Q_mono,[],2),'--', 'LineWidth',1);
+plot(time, max(sim_Prices_1.*sim_Q_1,[],2), '--',time, max(sim_Prices_2.*sim_Q_2,[],2), '--',time, max(sim_Prices_3.*sim_Q_3,[],2),'--', time, max(sim_Prices_4.*sim_Q_4,[],2),'--', time, max(sim_Prices_mono.*sim_Q_mono,[],2),'--', 'LineWidth',1);
 hold on
-plot(time, min(sim_Prices_1.*sim_Q_1,[],2), '--',time, min(sim_Prices_2.*sim_Q_2,[],2), '--',time, min(sim_Prices_3.*sim_Q_3,[],2),'--', time, min(sim_Prices_mono.*sim_Q_mono,[],2),'--', 'LineWidth',1);
+plot(time, min(sim_Prices_1.*sim_Q_1,[],2), '--',time, min(sim_Prices_2.*sim_Q_2,[],2), '--',time, min(sim_Prices_3.*sim_Q_3,[],2),'--', time, min(sim_Prices_4.*sim_Q_4,[],2),'--', time, min(sim_Prices_mono.*sim_Q_mono,[],2),'--', 'LineWidth',1);
 hold off
 
 leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
@@ -1441,18 +1906,18 @@ graph_names = {'Firm A'; 'Firm B'; 'Firm C'; 'Firm A+B+C'};
 for(i=1:4)
     subplot(4,1,i);
     %plot the turnover path for each firm
-    plot(time, sim_Turnovers_1(:,i,1), time, sim_Turnovers_2(:,i,1), time, sim_Turnovers_3(:,i,1), time, sim_Turnovers_mono(:,i,1),'LineWidth',2);
+    plot(time, sim_Turnovers_1(:,i,1), time, sim_Turnovers_2(:,i,1), time, sim_Turnovers_3(:,i,1), time, sim_Turnovers_4(:,i,1), time, sim_Turnovers_mono(:,i,1),'LineWidth',2);
     hold on
-    plot(time, max(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_3(:,i,:)),[],2),'--', time, max(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    plot(time, max(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_3(:,i,:)),[],2),'--', time, max(squeeze(sim_Turnovers_4(:,i,:)),[],2),'--', time, max(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
     hold on
-    plot(time, min(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_3(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    plot(time, min(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_3(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_4(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
     hold off
     title(graph_names{i});
     ylabel('Real price');
 
 end
 xlabel('Year');
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'positive-firm-NPV policy', 'cartel policy', 'Location', 'Best');
 set(leg1, 'Box', 'off', 'Color', 'none');
 
 annotation('textbox', [0 0.9 1 0.1], ...
@@ -1468,12 +1933,12 @@ colormap(lines(7));
 fig = figure(11);
 clf('reset');
 
-plot(sim_Q_1(:,1), sim_Prices_1(:,1), sim_Q_2(:,1), sim_Prices_2(:,1), sim_Q_3(:,1), sim_Prices_3(:,1), sim_Q_mono(:,1), sim_Prices_mono(:,1),'LineWidth',2);
+plot(sim_Q_1(:,1), sim_Prices_1(:,1), sim_Q_2(:,1), sim_Prices_2(:,1), sim_Q_3(:,1), sim_Prices_3(:,1),sim_Q_4(:,1), sim_Prices_4(:,1), sim_Q_mono(:,1), sim_Prices_mono(:,1),'LineWidth',2);
 
 title(['Price vs Quantity (' ordering ')']);
 xlabel('Market Quantity');
 ylabel('Price');
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'positive-firm-NPV policy', 'cartel policy', 'Location', 'Best');
 set(leg1, 'Box', 'off', 'Color', 'none');
 
 saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_Price vs Quantity.jpg']); 
@@ -1523,6 +1988,17 @@ for(f=1:numFirms)
         datatable{(numIncMines*(f-1)+m),1} = firmNames(f); 
         datatable{(numIncMines*(f-1)+m),2} = [firmNames(f),'-',num2str(m)];
         for(sim=1:simNum)
+            datatable{(numIncMines*(f-1)+m),2+sim} = sim_openings_4(m,f,sim); 
+        end
+    end
+end
+datatable_4 = datatable;
+
+for(f=1:numFirms)
+    for(m=1:numIncMines)
+        datatable{(numIncMines*(f-1)+m),1} = firmNames(f); 
+        datatable{(numIncMines*(f-1)+m),2} = [firmNames(f),'-',num2str(m)];
+        for(sim=1:simNum)
             datatable{(numIncMines*(f-1)+m),2+sim} = sim_openings_mono(m,f,sim); 
         end
     end
@@ -1532,7 +2008,7 @@ datatable_mono = datatable;
 %draw Figure 12
 colormap(lines(7)); 
 fig = figure(12);
-set(fig, 'units','pixels','position',[50 50 800 550]); 
+set(fig, 'units','pixels','position',[50 50 1200 550]); 
 clf('reset'); 
 
 cnames = [{'Firm', 'Mine'}, num2cell((1:simNum))];
@@ -1560,16 +2036,25 @@ annotation('textbox', [0 0.35 0.5 0.1], ...
 'String', ['Positive mine-NPV policy'], ...
 'EdgeColor', 'none', 'FitHeightToText', 'on', ...
 'HorizontalAlignment', 'center')
-tab_3 = uitable('Parent',fig,'Data',datatable_2,'ColumnName',cnames,... 
+tab_3 = uitable('Parent',fig,'Data',datatable_3,'ColumnName',cnames,... 
             'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20 20 370 200]);
 
-annotation('textbox', [0.5 0.35 0.5 0.1], ...
+annotation('textbox', [0.5 0.8 0.5 0.1], ...
+'String', ['Positive firm-NPV policy'], ...
+'EdgeColor', 'none', 'FitHeightToText', 'on', ...
+'HorizontalAlignment', 'center')
+tab_4 = uitable('Parent',fig,'Data',datatable_4,'ColumnName',cnames,... 
+            'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20+400 20 370 200]);
+        
+        
+annotation('textbox', [0 0.35 0.5 0.1], ...
 'String', ['Cartel policy'], ...
 'EdgeColor', 'none', 'FitHeightToText', 'on', ...
 'HorizontalAlignment', 'center')
-tab_mono = uitable('Parent',fig,'Data',datatable_2,'ColumnName',cnames,... 
-            'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20+400 20 370 200]);
+tab_mono = uitable('Parent',fig,'Data',datatable_mono,'ColumnName',cnames,... 
+            'RowName',rnames,'ColumnWidth',[{50,50},width],'Position',[20+400*2 20+250 370 200]);
 
+        
 annotation('textbox', [0 0.87 1 0.1], ...
 'String', ['Mine opening timing in different simulations (' ordering ')'], ...
 'EdgeColor', 'none', ...
@@ -1583,29 +2068,34 @@ saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_openings summary
 %%%%
 fig = figure(13);
 clf('reset');
-set(fig, 'units','normalized','position',[0.1 0.1 0.5 1]); 
+set(fig, 'units','normalized','position',[0.1 0.1 0.5 1.3]); 
 colormap(lines(10)); 
 
 graph_names = {'Firm A'; 'Firm B'; 'Firm C'; 'Firm A+B+C'}; 
 for(i=1:4)
-    subplot(4,1,i);
+    subplot(5,1,i);
     %plot the turnover path for each firm
-    plot(time, sim_Turnovers_1(:,i,1), time, sim_Turnovers_2(:,i,1), time, sim_Turnovers_3(:,i,1), time, sim_Turnovers_mono(:,i,1),'LineWidth',2);
+    plot(time, sim_Vt_1(:,i,1), time, sim_Vt_2(:,i,1), time, sim_Vt_3(:,i,1), time, sim_Vt_4(:,i,1), time, sim_Vt_mono(:,i,1),'LineWidth',2);
     hold on
-    plot(time, max(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, max(squeeze(sim_Turnovers_3(:,i,:)),[],2),'--', time, max(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    plot(time, max(squeeze(sim_Vt_1(:,i,:)),[],2), '--',time, max(squeeze(sim_Vt_2(:,i,:)),[],2), '--',time, max(squeeze(sim_Vt_3(:,i,:)),[],2),'--', time, max(squeeze(sim_Vt_4(:,i,:)),[],2),'--', time, max(squeeze(sim_Vt_mono(:,i,:)),[],2),'--', 'LineWidth',1);
     hold on
-    plot(time, min(squeeze(sim_Turnovers_1(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_2(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_3(:,i,:)),[],2), '--',time, min(squeeze(sim_Turnovers_mono(:,i,:)),[],2),'--', 'LineWidth',1);
+    plot(time, min(squeeze(sim_Vt_1(:,i,:)),[],2), '--',time, min(squeeze(sim_Vt_2(:,i,:)),[],2), '--',time, min(squeeze(sim_Vt_3(:,i,:)),[],2), '--',time, min(squeeze(sim_Vt_4(:,i,:)),[],2), '--',time,  min(squeeze(sim_Vt_mono(:,i,:)),[],2),'--', 'LineWidth',1);
     hold off
     title(graph_names{i});
     ylabel('Real price');
 
 end
 xlabel('Year');
-leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'market optimal policy', 'Location', 'Best');
+
+subplot(5,1,5); 
+plot(time, zeros(1,T_years), time, zeros(1,T_years), time, zeros(1,T_years), time, zeros(1,T_years), time, zeros(1,T_years),'LineWidth',2);
+axis([0 30 0 1])
+
+leg1 = legend('no new opening', 'best firm-NPV policy', 'positive-mine-NPV policy', 'positive-firm-NPV policy', 'cartel policy', 'Location', 'Best');
 set(leg1, 'Box', 'off', 'Color', 'none');
 
 annotation('textbox', [0 0.9 1 0.1], ...
-'String', ['Turnover in each period (' ordering ')'], ...
+'String', ['Cashflow in each period (' ordering ')'], ...
 'EdgeColor', 'none', ...
 'HorizontalAlignment', 'center')
 
@@ -1615,6 +2105,7 @@ saveas(fig, [ordering '_' criteria2vary '_' num2str(list_num) '_undisc cashflow 
 save([criteria2vary '_' num2str(list_num) '_' ordering '_variables_list']);
 diary off
 
+end
 end
 
 %%

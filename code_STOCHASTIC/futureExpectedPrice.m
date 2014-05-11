@@ -79,7 +79,7 @@ end
 
 
 %%
-%scenario 3 - incentive mines with opex + amortized capex (over the NPVyears period)
+%scenario 2 - incentive mines with opex + amortized capex (over the NPVyears period)
 %in the current period (after taking into account itself opening)
 %run this in a loop until the expected price path converges or after
 %running it 5 times
